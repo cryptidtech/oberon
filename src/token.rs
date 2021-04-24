@@ -1,3 +1,7 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
 use crate::{util::*, Blinding, PublicKey, SecretKey};
 use bls12_381_plus::{
     multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
@@ -8,11 +12,12 @@ use core::ops::{Add, Sub};
 use ff::Field;
 use group::{Curve, Group};
 use serde::{Deserialize, Serialize};
-use subtle::{Choice, CtOption};
+use subtle::{Choice, ConstantTimeEq, CtOption};
 use zeroize::Zeroize;
 
 /// The authentication token
-#[derive(Clone, Debug, Deserialize, Serialize)]
+/// Display is not implemented to prevent accidental leak of the token
+#[derive(Clone, Debug, Eq, Deserialize, Serialize)]
 pub struct Token(pub(crate) G1Projective);
 
 impl Zeroize for Token {
@@ -30,6 +35,18 @@ impl Drop for Token {
 impl Default for Token {
     fn default() -> Self {
         Self(G1Projective::identity())
+    }
+}
+
+impl PartialEq for Token {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).unwrap_u8() == 1
+    }
+}
+
+impl ConstantTimeEq for Token {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.0.ct_eq(&other.0)
     }
 }
 

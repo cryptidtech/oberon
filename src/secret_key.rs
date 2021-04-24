@@ -1,3 +1,7 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
 use crate::{util::*, Token};
 use bls12_381_plus::Scalar;
 use core::convert::TryFrom;
@@ -8,6 +12,7 @@ use subtle::{Choice, ConstantTimeEq, CtOption};
 use zeroize::Zeroize;
 
 /// The secret key used for signing tokens
+/// Display is not implemented to prevent accidental leak of the key
 #[derive(Clone, Debug, Eq, Deserialize, Serialize, Zeroize)]
 #[zeroize(drop)]
 pub struct SecretKey {

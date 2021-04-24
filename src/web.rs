@@ -1,3 +1,7 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
 use crate::{Blinding, Proof, PublicKey, SecretKey, Token};
 use rand::prelude::*;
 use wasm_bindgen::prelude::*;
@@ -10,7 +14,7 @@ use std::vec::Vec;
 #[cfg(any(feature = "alloc", feature = "std"))]
 type BlindingList = Vec<Blinding>;
 #[cfg(not(any(feature = "alloc", feature = "std")))]
-type BlindingList = [Blinding; 4];
+type BlindingList = [Blinding; crate::util::MAX_BLINDING_FACTORS];
 
 /// Create new random secret key
 #[wasm_bindgen]

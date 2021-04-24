@@ -1,4 +1,19 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
+//! Oberon allows endpoints to issue multi-factor capable tokens to consumers
+//! who can prove their validity with disclosing the tokens themselves without requiring
+//! email, SMS, or authenticator apps. Endpoints
+//! only need to store a single public key and not any tokens. An attacker that breaks
+//! into the server doesn't have any password/token files to steal and only would see
+//! a public key. The proof of token validity is only 96 bytes while the token itself
+//! is only 48 bytes. The issuing party and verifying servers can be separate entities.
 //!
+//! This crate supports no-std by default. As such this means only 2 additional factors
+//! can be used. This is usually not a problem since 3FA is good enough. If you need
+//! more than 3FA (what security context are in???) this can be done with some work
+//! as is described later.
 
 #![no_std]
 #![deny(

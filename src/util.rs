@@ -1,7 +1,13 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
 use bls12_381_plus::{ExpandMsgXof, G1Projective, Scalar};
 use digest::{ExtendableOutput, Update, XofReader};
 use sha3::Shake256;
 
+#[cfg(not(any(feature = "alloc", feature = "std")))]
+pub const MAX_BLINDING_FACTORS: usize = 2;
 const TO_SCALAR_DST: &'static [u8] = b"OBERON_BLS12381FQ_XOF:SHAKE-256_";
 const TO_CURVE_DST: &'static [u8] = b"OBERON_BLS12381G1_XOF:SHAKE-256_SSWU_RO_";
 

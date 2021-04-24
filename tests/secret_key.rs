@@ -1,3 +1,7 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
 mod common;
 
 use common::{MockRng, SEED};
@@ -36,7 +40,7 @@ fn new_seeded_secret_key() {
 }
 
 #[test]
-fn from_bytes() {
+fn secret_key_from_bytes() {
     let esk = SecretKey::hash(&SEED[..]);
     let ask = SecretKey::from_bytes(&[
         16, 133, 126, 11, 192, 153, 22, 14, 53, 214, 99, 40, 66, 194, 96, 30, 19, 86, 137, 107,

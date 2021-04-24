@@ -1,3 +1,7 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
 use crate::{SecretKey, Token};
 use bls12_381_plus::{G2Affine, G2Projective};
 use core::convert::TryFrom;
@@ -6,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use subtle::{Choice, CtOption};
 
 /// The public key used for verifying tokens
-#[derive(Copy, Clone, Debug, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
 pub struct PublicKey {
     pub(crate) w: G2Projective,
     pub(crate) x: G2Projective,
@@ -43,9 +47,9 @@ impl PublicKey {
     /// Convert this public key into a byte sequence
     pub fn to_bytes(&self) -> [u8; Self::BYTES] {
         let mut out = [0u8; Self::BYTES];
-        out.copy_from_slice(&self.w.to_affine().to_compressed()[..]);
-        out.copy_from_slice(&self.x.to_affine().to_compressed()[..]);
-        out.copy_from_slice(&self.y.to_affine().to_compressed()[..]);
+        out[0..96].copy_from_slice(&self.w.to_affine().to_compressed()[..]);
+        out[96..192].copy_from_slice(&self.x.to_affine().to_compressed()[..]);
+        out[192..288].copy_from_slice(&self.y.to_affine().to_compressed()[..]);
         out
     }
 

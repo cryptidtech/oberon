@@ -1,3 +1,7 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
 use crate::{util::*, Blinding, PublicKey, Token};
 use bls12_381_plus::{
     multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
@@ -48,7 +52,7 @@ impl Proof {
     ) -> Option<Self> {
         #[cfg(not(any(feature = "alloc", feature = "std")))]
         {
-            if blindings.len() > 2 {
+            if blindings.len() > MAX_BLINDING_FACTORS {
                 return None;
             }
         }
@@ -71,8 +75,9 @@ impl Proof {
         let r = Scalar::random(rng);
 
         let u_tick = u * r;
-        let (points, mut scalars) = get_points_and_scalars(&[u_tick, token.0], blindings, t, r);
-        let proof = G1Projective::sum_of_products_in_place(&points, &mut scalars);
+        let (points, mut scalars, len) =
+            get_points_and_scalars(&[u_tick, token.0], blindings, t, r);
+        let proof = G1Projective::sum_of_products_in_place(&points[..len], &mut scalars[..len]);
         Some(Self { proof, u_tick })
     }
 
@@ -138,11 +143,17 @@ fn get_points_and_scalars(
     blindings: &[Blinding],
     t: Scalar,
     r: Scalar,
-) -> ([G1Projective; 4], [Scalar; 4]) {
-    (
-        [initial[0], initial[1], blindings[0].0, blindings[1].0],
-        [t, r, r, r],
-    )
+) -> ([G1Projective; 4], [Scalar; 4], usize) {
+    let mut points = [
+        initial[0],
+        initial[1],
+        G1Projective::identity(),
+        G1Projective::identity(),
+    ];
+    for i in 0..blindings.len() {
+        points[i + 2] = blindings[i].0
+    }
+    (points, [t, r, r, r], 2 + blindings.len())
 }
 
 #[cfg(any(feature = "alloc", feature = "std"))]
@@ -151,7 +162,7 @@ fn get_points_and_scalars(
     blindings: &[Blinding],
     t: Scalar,
     r: Scalar,
-) -> (Vec<G1Projective>, Vec<Scalar>) {
+) -> (Vec<G1Projective>, Vec<Scalar>, usize) {
     let mut points = Vec::with_capacity(2 + blindings.len());
     let mut scalars = Vec::with_capacity(2 + blindings.len());
 
@@ -163,5 +174,5 @@ fn get_points_and_scalars(
         points.push(b.0);
         scalars.push(r);
     }
-    (points, scalars)
+    (points, scalars, points.len())
 }

@@ -1,3 +1,7 @@
+/*
+    Copyright Michael Lodder. All Rights Reserved.
+    SPDX-License-Identifier: Apache-2.0
+*/
 use crate::util::*;
 use bls12_381_plus::{G1Affine, G1Projective};
 #[cfg(feature = "wasm")]
