@@ -10,10 +10,60 @@
 //! a public key. The proof of token validity is only 96 bytes while the token itself
 //! is only 48 bytes. The issuing party and verifying servers can be separate entities.
 //!
+//! Tokens are created by signing an identitifier with a secret key.
+//!
+//! Tokens are presented to a verifier as a zero-knowledge proof such that
+//! the verifier never learns the value of the token. Additional blindings
+//! can be applied to the token so additional security factors are required
+//! before using it. One example is a pin or password.
+//!
+//! use oberon::*;
+//! use rand::thread_rng;
+//!
+//! let sk = SecretKey::hash(b"my super secret key seed");
+//! let pk = PublicKey::from(&sk);
+//! let id = b"test identity";
+//! let token = sk.sign(id).unwrap();
+//! let blinding = Blinding::new(b"<your passcode>");
+//! let blinded_token = token - &blinding;
+//!
+//! let timestamp = [0x00, 0x05, 0xc0, 0xba, 0xea, 0x9c, 0x82, 0xb0];
+//!
+//! match Proof::new(&blinded_token, &[blinding], id, &timestamp, thread_rng()) {
+//!     None => panic!(""),
+//!     Some(proof) => {
+//!         assert_eq!(proof.open(pk, id, &timestamp).unwrap_u8(), 1u8);
+//!     }
+//! }
+//!
 //! This crate supports no-std by default. As such this means only 2 additional factors
 //! can be used. This is usually not a problem since 3FA is good enough. If you need
 //! more than 3FA (what security context are in???) this can be done with some work
-//! as is described later.
+//! as is described below.
+//!
+//! Blinding factors are applied to tokens as follows
+//!
+//! ```
+//! use oberon::{SecretKey, Token, Blinding};
+//!
+//! let sk = SecretKey::hash(b"my super secret key seed");
+//! let token = sk.sign(b"test identity").unwrap();
+//!
+//! let blinded_token = token - Blinding::new(b"<your pin number>");
+//! let blinded_token = blinded_token - Blinding::new(b"<another factor like HSM key>");
+//! let blinded_token = blinded_token - Blinding::new(b"<another factor like ENV>");
+//! ```
+//!
+//! It is important that the blindings are subtracted and not added since addition is used
+//! by `Proof::new`
+//!
+//! This scenario uses 3 extra blindings. In no-std mode, only two can be passed
+//! to `Proof::new`. In order to apply the third and still have this work, you simply
+//! reverse all but two of the blindings by adding them back in.
+//! This restriction doesn't apply when `alloc` or `std` features are used.
+//!
+//! This crate also supports compiling to wasm. Make sure to use --features=wasm
+//! to get the necessary functions
 
 #![no_std]
 #![deny(
@@ -24,6 +74,7 @@
     trivial_casts,
     trivial_numeric_casts
 )]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
@@ -109,5 +160,6 @@ pub use proof::*;
 pub use public_key::*;
 pub use secret_key::*;
 pub use token::*;
+#[cfg_attr(docsrs, doc(cfg(feature = "wasm")))]
 #[cfg(feature = "wasm")]
 pub use web::*;

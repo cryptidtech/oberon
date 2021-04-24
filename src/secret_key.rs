@@ -13,6 +13,19 @@ use zeroize::Zeroize;
 
 /// The secret key used for signing tokens
 /// Display is not implemented to prevent accidental leak of the key
+///
+/// To generate a random secret key, select a random number generator
+/// to pass to `new`
+///
+/// use oberon::*;
+/// let sk = SecretKey::new(rand::thread_rng());
+///
+/// or to generate a secret key from a known seed
+///
+/// ```
+/// use oberon::*;
+/// let sk = SecretKey::hash(b"my seed");
+/// ```
 #[derive(Clone, Debug, Eq, Deserialize, Serialize, Zeroize)]
 #[zeroize(drop)]
 pub struct SecretKey {

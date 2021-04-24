@@ -12,6 +12,14 @@ use subtle::CtOption;
 
 /// A blinding factor is applied to a token to enable
 /// multi factor authentication
+///
+/// ```
+/// use oberon::Blinding;
+///
+/// let blinding = Blinding::new(b"1234");
+///
+/// assert_ne!(blinding.to_bytes(), [0u8; Blinding::BYTES]);
+/// ```
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub struct Blinding(pub(crate) G1Projective);
 
