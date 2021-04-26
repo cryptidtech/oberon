@@ -20,7 +20,7 @@ The cryptography can be found [here](CRYPTO.md)
 Include the crate into your project. By default, no-std is enabled.
 
 ```toml
-oberson = "1.0.0-pre1"
+oberon = "1.0.0-pre2"
 ```
 
 First steps require generating keys
