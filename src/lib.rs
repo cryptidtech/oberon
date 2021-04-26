@@ -17,6 +17,7 @@
 //! can be applied to the token so additional security factors are required
 //! before using it. One example is a pin or password.
 //!
+//! ```
 //! use oberon::*;
 //! use rand::thread_rng;
 //!
@@ -35,6 +36,7 @@
 //!         assert_eq!(proof.open(pk, id, &timestamp).unwrap_u8(), 1u8);
 //!     }
 //! }
+//! ```
 //!
 //! This crate supports no-std by default. As such this means only 2 additional factors
 //! can be used. This is usually not a problem since 3FA is good enough. If you need
@@ -140,7 +142,6 @@ macro_rules! wasm_slice_impl {
                 value
                     .into_serde::<$name>()
                     .map_err(|_| "unable to deserialize value")
-                // serde_wasm_bindgen::from_value(value).map_err(|_| "unable to deserialize value")
             }
         }
     };

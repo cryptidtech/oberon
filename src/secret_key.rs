@@ -17,8 +17,10 @@ use zeroize::Zeroize;
 /// To generate a random secret key, select a random number generator
 /// to pass to `new`
 ///
+/// ```
 /// use oberon::*;
 /// let sk = SecretKey::new(rand::thread_rng());
+/// ```
 ///
 /// or to generate a secret key from a known seed
 ///
