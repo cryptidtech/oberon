@@ -2,12 +2,9 @@
 name = "oberon"
 authors = ["Michael Lodder <redmike7@gmail.com>"]
 description = """
-Oberon allows endpoints to issue multi-factor capable tokens to consumers
-who can prove their validity with disclosing the tokens themselves without requiring email, SMS, or authenticator apps. Endpoints
-only need to store a single public key and not any tokens. An attacker that breaks
-into the server doesn't have any password/token files to steal and only would see
-a public key. The proof of token validity is only 96 bytes while the token itself
-is only 48 bytes. The issuing party and verifying servers can be separate entities.
+Oberon is a multi-factor zero-knowledge capable token
+without requiring email, SMS, or authenticator apps.
+The proof of token validity is only 96 bytes while the token itself is only 48 bytes.
 """
 edition = "2018"
 keywords = ["zero-knowledge", "cryptography", "authentication"]
@@ -16,7 +13,7 @@ homepage = "https://github.com/mikelodder7/oberon"
 license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/mikelodder7/oberon"
-version = "1.0.0-pre1"
+version = "1.0.0-pre2"
 
 [lib]
 crate-type = ["rlib", "cdylib"]
