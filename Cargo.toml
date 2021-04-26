@@ -25,12 +25,13 @@ lto = true
 default = []
 alloc = ["bls12_381_plus/alloc", "digest/alloc"]
 std = ["digest/std", "sha3/std"]
-wasm = ["rand", "wasm-bindgen"]
+wasm = ["getrandom", "rand", "wasm-bindgen"]
 
 [dependencies]
 bls12_381_plus = "0.4"
 digest = { version = "0.9", default-features = false }
 ff = "0.9"
+getrandom = { version = "0.2", features = ["js"], optional = true }
 group = "0.9"
 rand_core = "0.6"
 rand = { version = "0.8", default-feature = false, optional = true }
