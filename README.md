@@ -6,12 +6,14 @@
 A succinct ZKP protocol for authentication. It works by using techniques similar to
 Identity-Based/Attribute-Based signatures.
 
-**Executive Summary**: Oberon allows endpoints to issue multi-factor capable tokens to consumers
-who can prove their validity with disclosing the tokens themselves without requiring email, SMS, or authenticator apps. Endpoints
-only need to store a single public key and not any tokens. An attacker that breaks
-into the server doesn't have any password/token files to steal and only would see
-a public key. The proof of token validity is only 96 bytes while the token itself
-is only 48 bytes. The issuing party and verifying servers can be separate entities.
+**Executive Summary**: Oberon allows endpoints to issue multi-factor capable
+tokens to consumers who can prove their validity *without* disclosing the
+tokens themselves and without requiring email, SMS, or authenticator apps.
+Endpoints only need to store a single public key and not any tokens. An
+attacker that breaks into the server doesn't have any password/token files to
+steal and only would see a public key. The proof of token validity is only 96
+bytes while the token itself is only 48 bytes. The issuing party and verifying
+servers can be separate entities.
 
 ## In depth details
 
