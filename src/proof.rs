@@ -118,8 +118,8 @@ impl Proof {
     /// Convert this proof into a byte sequence
     pub fn to_bytes(&self) -> [u8; Self::BYTES] {
         let mut out = [0u8; Self::BYTES];
-        out.copy_from_slice(&self.proof.to_affine().to_compressed());
-        out.copy_from_slice(&self.u_tick.to_affine().to_compressed());
+        out[..48].copy_from_slice(&self.proof.to_affine().to_compressed());
+        out[48..].copy_from_slice(&self.u_tick.to_affine().to_compressed());
         out
     }
 
