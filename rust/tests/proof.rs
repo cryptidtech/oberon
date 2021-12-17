@@ -50,3 +50,20 @@ fn proof_works() {
         ]
     );
 }
+
+#[test]
+fn vectors() {
+    let mut rng = MockRng::new();
+    let sk = SecretKey::new(&mut rng);
+    let pk = PublicKey::from(&sk);
+    let id = hex::decode("aa").unwrap();
+    let token = sk.sign(&id).unwrap();
+    let mut nonce = [0u8; 16];
+    rng.fill_bytes(&mut nonce);
+    let proof = Proof::new(&token, &[], &id, nonce, &mut rng).unwrap();
+    println!("sk    = {}", hex::encode(sk.to_bytes()));
+    println!("token = {}", hex::encode(token.to_bytes()));
+    println!("nonce = {}", hex::encode(nonce));
+    println!("proof = {}", hex::encode(proof.to_bytes()));
+    println!("open = {}", proof.open(pk, &id, nonce).unwrap_u8())
+}
