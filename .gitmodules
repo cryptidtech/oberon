@@ -1,0 +1,3 @@
+[submodule "go/bls12-381"]
+	path = go/bls12-381
+	url = https://github.com/mikelodder7/bls12-381

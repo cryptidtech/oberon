@@ -19,12 +19,6 @@ servers can be separate entities.
 
 The cryptography can be found [here](CRYPTO.md)
 
-Include the crate into your project. By default, no-std is enabled.
-
-```toml
-oberon = "1.0.0-pre2"
-```
-
 First steps require generating keys
 
 The secret key can be generated using distributed key generation methods also but is outside the scope of this crate.

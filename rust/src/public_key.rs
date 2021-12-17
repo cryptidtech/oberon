@@ -56,11 +56,11 @@ impl PublicKey {
     /// Convert a byte sequence to a public key
     pub fn from_bytes(data: &[u8; Self::BYTES]) -> CtOption<Self> {
         let ww = G2Affine::from_compressed(&<[u8; 96]>::try_from(&data[..96]).unwrap())
-            .map(|p| G2Projective::from(p));
+            .map(G2Projective::from);
         let xx = G2Affine::from_compressed(&<[u8; 96]>::try_from(&data[96..192]).unwrap())
-            .map(|p| G2Projective::from(p));
+            .map(G2Projective::from);
         let yy = G2Affine::from_compressed(&<[u8; 96]>::try_from(&data[192..]).unwrap())
-            .map(|p| G2Projective::from(p));
+            .map(G2Projective::from);
 
         ww.and_then(|w| {
             xx.and_then(|x| yy.and_then(|y| CtOption::new(Self { w, x, y }, Choice::from(1u8))))

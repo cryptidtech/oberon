@@ -58,7 +58,7 @@ impl<'a, 'b> Add<&'b Blinding> for &'a Token {
 
     #[inline]
     fn add(self, rhs: &'b Blinding) -> Token {
-        Token(self.0 + rhs.0)
+        self + *rhs
     }
 }
 
@@ -67,7 +67,7 @@ impl<'b> Add<&'b Blinding> for Token {
 
     #[inline]
     fn add(self, rhs: &'b Blinding) -> Token {
-        &self + rhs
+        self + *rhs
     }
 }
 
@@ -76,7 +76,7 @@ impl<'a> Add<Blinding> for &'a Token {
 
     #[inline]
     fn add(self, rhs: Blinding) -> Token {
-        self + &rhs
+        Token(self.0 + rhs.0)
     }
 }
 
@@ -85,7 +85,7 @@ impl Add<Blinding> for Token {
 
     #[inline]
     fn add(self, rhs: Blinding) -> Token {
-        &self + &rhs
+        Token(self.0 + rhs.0)
     }
 }
 
@@ -94,7 +94,7 @@ impl<'a, 'b> Sub<&'b Blinding> for &'a Token {
 
     #[inline]
     fn sub(self, rhs: &'b Blinding) -> Token {
-        Token(self.0 - rhs.0)
+        self - *rhs
     }
 }
 
@@ -103,7 +103,7 @@ impl<'b> Sub<&'b Blinding> for Token {
 
     #[inline]
     fn sub(self, rhs: &'b Blinding) -> Token {
-        &self - rhs
+        self - *rhs
     }
 }
 
@@ -112,7 +112,7 @@ impl<'a> Sub<Blinding> for &'a Token {
 
     #[inline]
     fn sub(self, rhs: Blinding) -> Token {
-        self - &rhs
+        Token(self.0 - rhs.0)
     }
 }
 
@@ -121,7 +121,7 @@ impl Sub<Blinding> for Token {
 
     #[inline]
     fn sub(self, rhs: Blinding) -> Token {
-        &self - &rhs
+        Token(self.0 - rhs.0)
     }
 }
 
@@ -149,7 +149,7 @@ impl Token {
         if sigma.is_identity().unwrap_u8() == 1 {
             return None;
         }
-        return Some(Self(sigma));
+        Some(Self(sigma))
     }
 
     /// Check whether the token is valid to the public key

@@ -8,8 +8,8 @@ use sha3::Shake256;
 
 #[cfg(not(any(feature = "alloc", feature = "std")))]
 pub const MAX_BLINDING_FACTORS: usize = 2;
-const TO_SCALAR_DST: &'static [u8] = b"OBERON_BLS12381FQ_XOF:SHAKE-256_";
-const TO_CURVE_DST: &'static [u8] = b"OBERON_BLS12381G1_XOF:SHAKE-256_SSWU_RO_";
+const TO_SCALAR_DST: &[u8] = b"OBERON_BLS12381FQ_XOF:SHAKE-256_";
+const TO_CURVE_DST: &[u8] = b"OBERON_BLS12381G1_XOF:SHAKE-256_SSWU_RO_";
 
 pub fn hash_to_scalar(data: &[&[u8]]) -> Scalar {
     let mut hasher = Shake256::default();

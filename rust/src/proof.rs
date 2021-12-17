@@ -126,9 +126,9 @@ impl Proof {
     /// Convert a byte sequence to a proof
     pub fn from_bytes(data: &[u8; Self::BYTES]) -> CtOption<Self> {
         let pp = G1Affine::from_compressed(&<[u8; 48]>::try_from(&data[..48]).unwrap())
-            .map(|p| G1Projective::from(p));
+            .map(G1Projective::from);
         let uu = G1Affine::from_compressed(&<[u8; 48]>::try_from(&data[48..]).unwrap())
-            .map(|p| G1Projective::from(p));
+            .map(G1Projective::from);
 
         pp.and_then(|proof| {
             uu.and_then(|u_tick| CtOption::new(Self { proof, u_tick }, Choice::from(1u8)))
