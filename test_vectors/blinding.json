@@ -1,0 +1,18 @@
+[
+    {
+        "in": "",
+        "out": "b56779b433e83079324eb03f2b31b320df167b6f627e417813595ed2b178039fcda4dd5da879825b049b39c0439c8f7f" 
+    },
+    {
+        "in": "aaaa",
+        "out": "a53bb8dabda430bd10d74868c1eb2118a9987b4629593cd3b716cf462bd0b410758c5ba98949c9b7e1bb7d93ce978109"
+    },
+    {
+        "in": "aaaaaaaaaa",
+        "out": "84e9ebc37b27fabcd833e9b42bd3e632aea6df1de58c54ef0d8a54ba5ef08f50e7e614e77a4fcc303b609520c4349741"
+    },
+    {
+        "in": "1234",
+        "out": "80a239769c64ce5b3fa70d1ab5feb704ced21a048154def378dc35b7a673016e37ae2d1ff50b5535383b9f6198756910"
+    }
+]
