@@ -23,6 +23,7 @@ cover:
 .PHONY: deps
 deps:
 	${GO} mod tidy
+	if [ -d "./bls12-381" ] ; then git submodule update bls12-381; fi
 
 .PHONY: deflake
 deflake:
