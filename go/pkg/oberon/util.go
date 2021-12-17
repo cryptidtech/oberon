@@ -3,7 +3,7 @@ package oberon
 import (
 	"encoding/binary"
 	"fmt"
-	bls12381 "github.com/kilic/bls12-381"
+	bls12381 "github.com/mikelodder7/bls12-381"
 	"golang.org/x/crypto/sha3"
 )
 

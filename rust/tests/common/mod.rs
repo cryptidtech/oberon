@@ -1,5 +1,5 @@
 pub const SEED: [u8; 16] = [7u8; 16];
-pub const ID: &'static [u8] = b"oberon test identity";
+pub const ID: &[u8] = b"oberon test identity";
 
 pub struct MockRng(rand_xorshift::XorShiftRng);
 

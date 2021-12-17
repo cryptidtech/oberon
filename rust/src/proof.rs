@@ -48,7 +48,7 @@ impl Proof {
         blindings: &[Blinding],
         id: B,
         nonce: N,
-        rng: impl RngCore + CryptoRng,
+        mut rng: impl RngCore + CryptoRng,
     ) -> Option<Self> {
         #[cfg(not(any(feature = "alloc", feature = "std")))]
         {
@@ -72,7 +72,19 @@ impl Proof {
         }
 
         let t = hash_to_scalar(&[id, nonce.as_ref()]);
-        let r = Scalar::random(rng);
+        let mut r = Scalar::random(&mut rng);
+
+        if t.is_zero() || t == Scalar::one() {
+            return None;
+        }
+        let mut attempts = 0;
+        while (r.is_zero() || r == Scalar::one()) && attempts < 100 {
+            attempts += 1;
+            r = Scalar::random(&mut rng);
+        }
+        if attempts == 100 {
+            return None;
+        }
 
         let u_tick = u * r;
         let (points, mut scalars, len) =
@@ -98,6 +110,9 @@ impl Proof {
         }
 
         let t = hash_to_scalar(&[id, nonce.as_ref()]);
+        if t.is_zero() || t == Scalar::one() {
+            return Choice::from(0u8);
+        }
 
         let rhs = G2Projective::sum_of_products_in_place(
             &[pk.w, pk.x, pk.y, G2Projective::generator()],
@@ -175,4 +190,9 @@ fn get_points_and_scalars(
         scalars.push(r);
     }
     (points, scalars, points.len())
+}
+
+#[test]
+fn vectors() {
+
 }

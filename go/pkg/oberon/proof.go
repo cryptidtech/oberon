@@ -3,7 +3,7 @@ package oberon
 import (
 	"encoding/json"
 	"fmt"
-	bls12381 "github.com/kilic/bls12-381"
+	bls12381 "github.com/mikelodder7/bls12-381"
 	"io"
 )
 
@@ -39,10 +39,24 @@ func (p *Proof) Create(
 	if err != nil {
 		return err
 	}
+	if t.IsZero() || t.IsOne() {
+		return fmt.Errorf("invalid t value")
+	}
 	r, err := bls12381.NewFr().Rand(rng)
 	if err != nil {
 		return err
 	}
+	attempts := 0
+	for ; (r.IsZero() || r.IsOne()) && attempts < 100; attempts++ {
+		r, err = bls12381.NewFr().Rand(rng)
+		if err != nil {
+			return err
+		}
+	}
+	if attempts == 100 {
+		return fmt.Errorf("invalid r value")
+	}
+
 	uTick := g1.MulScalar(g1.New(), u, r)
 	points := make([]*bls12381.PointG1, 0, 2 + len(blindings))
 	scalars := make([]*bls12381.Fr, 0, 2 + len(blindings))
@@ -90,6 +104,9 @@ func (p Proof) Open(
 	t, err := hashToScalar([][]byte{id, nonce})
 	if err != nil {
 		return err
+	}
+	if t.IsZero() || t.IsOne() {
+		return fmt.Errorf("invalid t value")
 	}
 
 	rhs, err := g2.MultiExp(g2.New(),
