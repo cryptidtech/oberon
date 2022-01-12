@@ -22,7 +22,7 @@ func (p *Proof) Create(
 	blindings []*Blinding,
 	id, nonce []byte,
 	rng io.Reader,
-	) error {
+) error {
 	m, err := computeM(id)
 	if err != nil {
 		return err
@@ -58,8 +58,8 @@ func (p *Proof) Create(
 	}
 
 	uTick := g1.MulScalar(g1.New(), u, r)
-	points := make([]*bls12381.PointG1, 0, 2 + len(blindings))
-	scalars := make([]*bls12381.Fr, 0, 2 + len(blindings))
+	points := make([]*bls12381.PointG1, 0, 2+len(blindings))
+	scalars := make([]*bls12381.Fr, 0, 2+len(blindings))
 
 	points = append(points, uTick)
 	scalars = append(scalars, t)
@@ -85,7 +85,7 @@ func (p *Proof) Create(
 func (p Proof) Open(
 	pk *PublicKey,
 	id, nonce []byte,
-	) error {
+) error {
 	goodProof := isValidPointG1(p.Proof)
 	goodUTick := isValidPointG1(p.UTick)
 
@@ -155,8 +155,8 @@ func (p *Proof) UnmarshalBinary(in []byte) error {
 }
 
 func (p Proof) MarshalText() ([]byte, error) {
-	tmp := map[string][]byte {
-		"proof": g1.ToCompressed(p.Proof),
+	tmp := map[string][]byte{
+		"proof":  g1.ToCompressed(p.Proof),
 		"u_tick": g1.ToCompressed(p.UTick),
 	}
 	return json.Marshal(&tmp)

@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	g1 = bls12381.NewG1()
-	g2 = bls12381.NewG2()
+	g1    = bls12381.NewG1()
+	g2    = bls12381.NewG2()
 	genG2 = g2.One()
 )
 
@@ -62,7 +62,7 @@ func (p *PublicKey) UnmarshalBinary(in []byte) error {
 }
 
 func (p PublicKey) MarshalText() ([]byte, error) {
-	tmp := map[string][]byte {
+	tmp := map[string][]byte{
 		"w": g2.ToCompressed(p.W),
 		"x": g2.ToCompressed(p.X),
 		"y": g2.ToCompressed(p.Y),

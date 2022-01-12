@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	f2192 = &bls12381.Fr{ 0, 0, 0, 1 }
+	f2192       = &bls12381.Fr{0, 0, 0, 1}
 	toScalarDst = []byte("OBERON_BLS12381FQ_XOF:SHAKE-256_")
-	toCurveDst = []byte("OBERON_BLS12381G1_XOF:SHAKE-256_SSWU_RO_")
+	toCurveDst  = []byte("OBERON_BLS12381G1_XOF:SHAKE-256_SSWU_RO_")
 )
 
 func computeM(id []byte) (*bls12381.Fr, error) {

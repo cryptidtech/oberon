@@ -6,7 +6,6 @@ import (
 	bls12381 "github.com/mikelodder7/bls12-381"
 )
 
-
 type Token struct {
 	Value *bls12381.PointG1
 }
@@ -81,8 +80,9 @@ func (t *Token) Verify(pk *PublicKey, id []byte) error {
 }
 
 func (t *Token) ApplyBlinding(token *Token, b *Blinding) *Token {
-	t.Value = g1.New()
-	g1.Sub(t.Value, token.Value, b.Value)
+	tmp := g1.New()
+	g1.Sub(tmp, token.Value, b.Value)
+	t.Value = tmp
 	return t
 }
 

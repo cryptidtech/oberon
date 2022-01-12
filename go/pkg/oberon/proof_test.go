@@ -36,6 +36,18 @@ func TestProof(t *testing.T) {
 	proof, err = NewProof(blindedToken, []*Blinding{}, testId, nonce, crand.Reader)
 	require.NoError(t, err)
 	require.Error(t, proof.Open(pk, testId, nonce))
+
+	blindedToken = token.ApplyBlinding(token, blinding)
+	proof, err = NewProof(blindedToken, []*Blinding{blinding}, testId, nonce, crand.Reader)
+	require.NoError(t, err)
+	require.NotNil(t, proof)
+	require.NoError(t, proof.Open(pk, testId, nonce))
+	require.Error(t, proof.Open(pk, []byte("wrong id"), nonce))
+	require.Error(t, proof.Open(pk, testId, []byte("wrong nonce")))
+	// No blindings
+	proof, err = NewProof(blindedToken, []*Blinding{}, testId, nonce, crand.Reader)
+	require.NoError(t, err)
+	require.Error(t, proof.Open(pk, testId, nonce))
 }
 
 func TestProof2(t *testing.T) {

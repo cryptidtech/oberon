@@ -8,7 +8,6 @@ import (
 	"io"
 )
 
-
 type SecretKey struct {
 	W *bls12381.Fr
 	X *bls12381.Fr
@@ -112,7 +111,7 @@ func (s *SecretKey) UnmarshalBinary(in []byte) error {
 }
 
 func (s SecretKey) MarshalText() ([]byte, error) {
-	tmp := map[string][]byte {
+	tmp := map[string][]byte{
 		"w": reverseBytes(s.W.ToBytes()),
 		"x": reverseBytes(s.X.ToBytes()),
 		"y": reverseBytes(s.Y.ToBytes()),
@@ -155,4 +154,3 @@ func (s *SecretKey) UnmarshalText(in []byte) error {
 	}
 	return nil
 }
-
