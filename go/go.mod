@@ -1,4 +1,4 @@
-module github.com/mikelodder7/oberon
+module github.com/mikelodder7/oberon/go
 
 go 1.17
 
