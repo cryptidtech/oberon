@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.5.1/katex.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/github-markdown-css/2.2.1/github-markdown.css"/>
+
 ## Primitives
 
 ### Curve and Bilinear Maps
@@ -6,35 +9,35 @@ The protocol uses pairing-friendly curves as the basic building block under the 
 
 This implementation uses [BLS12-381](https://hackmd.io/@benjaminion/bls12-381) but can easily change to any other pairing-friendly curve.
 
-The curve **C** parameters are denoted as
+The curve <img src="https://render.githubusercontent.com/render/math?math=C"> parameters are denoted as
 
-- **k**: The security parameter in bits.
-- **p**: The field modulus
-- **q**: The subgroup order
-- **G<sub>1</sub>**: Points in the cyclic group of order **p**
-- **G<sub>2</sub>**: Points in the multiplicative group of order **p<sup>2</sup>**
-- **e()**: A pairing function that takes **G<sub>1</sub>** and **G<sub>2</sub>** and returns a result in the multiplicative group **G<sub>T</sub>** in **p<sup>12</sup>**
-- **P**: The base point in **G<sub>1</sub>**
-- **<span style="text-decoration:overline">P</span>**: The base point in **G<sub>2</sub>**
-- **1<sub>G1</sup>**: The point at infinity in **G<sub>1</sub>**
-- **1<sub>G2</sup>**: The point at infinity in **G<sub>2</sub>**
-- **1<sub>GT</sup>**: The point at infinity in **G<sub>T</sub>**
+- <img src="https://render.githubusercontent.com/render/math?math=k">: The security parameter in bits.
+- <img src="https://render.githubusercontent.com/render/math?math=p">: The field modulus
+- <img src="https://render.githubusercontent.com/render/math?math=q">: The subgroup order
+- <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_1">: Points in the cyclic group of order <img src="https://render.githubusercontent.com/render/math?math=p">
+- <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_2">: Points in the multiplicative group of order <img src="https://render.githubusercontent.com/render/math?math=p^2">
+- <img src="https://render.githubusercontent.com/render/math?math=e()">: A pairing function that takes <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_1"> and <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_2"> and returns a result in the multiplicative group <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_T"> in <img src="https://render.githubusercontent.com/render/math?math=p^12">
+- <img src="https://render.githubusercontent.com/render/math?math=P">: The base point in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_1">
+- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{P}">: The base point in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_2">
+- <img src="https://render.githubusercontent.com/render/math?math=1_{\mathbb{G}_1}">: The point at infinity in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_1">
+- <img src="https://render.githubusercontent.com/render/math?math=1_{\mathbb{G}_2}">: The point at infinity in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_2">
+- <img src="https://render.githubusercontent.com/render/math?math=1_{\mathbb{G}_T}">: The point at infinity in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_T">
 
-Scalars operate in **Z<sub>q</sub>** and are denoted as lower case letters.
+Scalars operate in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{Z}_q"> and are denoted as lower case letters.
 Scalars are represented with 32 bytes with BLS12-381.
 
-Points operating in **G<sub>1</sub>** are denoted as capital letters.
-**G<sub>1</sub>** points in BLS12-381 are 48 bytes compressed and 96 bytes uncompressed.
+Points operating in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_1"> are denoted as capital letters.
+<img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_1"> points in BLS12-381 are 48 bytes compressed and 96 bytes uncompressed.
 
-Points operating in **G<sub>2</sub>** are denoted as capital letters with an overline.
-**G<sub>2</sub>** points in BLS12-381 are 96 bytes compressed and 192 bytes uncompressed.
+Points operating in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_2"> are denoted as capital letters with a wide tilde.
+<img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_2"> points in BLS12-381 are 96 bytes compressed and 192 bytes uncompressed.
 
 ### Hash to Curve
 
 Oberon uses [Hash to curve](https://datatracker.ietf.org/doc/draft-irtf-cfrg-hash-to-curve/)
 to map arbitrary byte sequences to random points with unknown discrete logs.
 
-This is denoted as H<sub>G1</sub> for hashing to a point in **G<sub>1</sub>**.
+This is denoted as <img src="https://render.githubusercontent.com/render/math?math=H_{\mathbb{G}_1}"> for hashing to a point in <img src="https://render.githubusercontent.com/render/math?math=\mathbb{G}_1">.
 
 The hash to curve standard demands a unique DST to be defined. Oberon uses
 
@@ -45,15 +48,15 @@ The hash to curve standard demands a unique DST to be defined. Oberon uses
 Oberon hashes arbitrary byte sequences to a field element. The tricky part here is
 to generate enough bytes such that the result is distributed uniformly random.
 
-A common approach is to use SHA256 to hash to byte sequence then reduce modulo **q**.
+A common approach is to use SHA256 to hash to byte sequence then reduce modulo <img src="https://render.githubusercontent.com/render/math?math=q">.
 However, this results in a biased result that isn't uniform. Instead more bytes
-should be generated then reduced modulo **q**.
+should be generated then reduced modulo <img src="https://render.githubusercontent.com/render/math?math=q">.
 The number of bytes is calculated with L = ceil((ceil(log2(p)) + k) / 8).
 For BLS12-381 this is L=48 bytes.
 
 This implementation uses SHAKE-256 to output 48 bytes.
 
-Hash to field is denoted as H<sub>q</sub>.
+Hash to field is denoted as <img src="https://render.githubusercontent.com/render/math?math=H_{\mathbb{Z}_q}">.
 
 Hash to field uses the domain separation tag `OBERON_BLS12381FQ_XOF:SHAKE-256_`
 
@@ -67,8 +70,8 @@ Existential Unforgeability against Adaptively Chosen Message Attacks (EUF-CMA).
 ### Notations
 
 - a || b: is the byte concatenation of two elements a, b
-- <span style="text-decoration: underline;">&larr;</span> **Z<sub>q</sub>**: is a random number in the field **Z<sub>q</sub>**
-- **id** is the user’s identification string
+- <img src="https://render.githubusercontent.com/render/math?math=\xleftarrow{\$}\mathbb{Z}_q">: is a random number in the field <img src="https://render.githubusercontent.com/render/math?math=\mathbb{Z}_q">
+- <img src="https://render.githubusercontent.com/render/math?math=id"> is the user’s identification string
 
 ## Algorithms
 
@@ -76,39 +79,39 @@ Oberon has the following algorithms:
 
 ### KeyGen
 
-By default, Oberon only signs a user’s identity string **id**, but PS signatures
+By default, Oberon only signs a user’s identity string <img src="https://render.githubusercontent.com/render/math?math=id">, but PS signatures
 support many attributes if needed with the tradeoff that keys get bigger but not the token.
 
-KeyGen(**C**)
+KeyGen(<img src="https://render.githubusercontent.com/render/math?math=C">)
 
 Generate BLS keys and set them for
 
-w, <span style="text-decoration:overline">W</span>,
-x, <span style="text-decoration:overline">X</span>,
-y, <span style="text-decoration:overline">Y</span>
+<img src="https://render.githubusercontent.com/render/math?math=w, \widetilde{W}">
+<img src="https://render.githubusercontent.com/render/math?math=x, \widetilde{X}">
+<img src="https://render.githubusercontent.com/render/math?math=y, \widetilde{Y}">
 
 The output is
 
-The secret key **sk**={w, x, y} and is 96 bytes.
+The secret key <img src="https://render.githubusercontent.com/render/math?math=sk = \{w, x, y\}"> and is 96 bytes.
 
-The public key **pk**={<span style="text-decoration:overline">W</span>, <span style="text-decoration:overline">X</span>, <span style="text-decoration:overline">Y</span>} and is 288 bytes.
+The public key <img src="https://render.githubusercontent.com/render/math?math=pk = \{\widetilde{W}, \widetilde{X}, \widetilde{Y}\}"> and is 288 bytes.
 
 ### Sign
 
 Sign creates a token to be given to a user and works as follows
 
-Sign(**sk**, **id**)
+Sign(<img src="https://render.githubusercontent.com/render/math?math=sk">, <img src="https://render.githubusercontent.com/render/math?math=id">)
 
-- m = H<sub>q</sub>(**id**)
-- if m = 0 abort
-- m' = H<sub>q</sub>(m)
-- if m' = 0 abort
-- U = H<sub>G1</sub>(m')
-- if U = 1<sub>G1</sub> abort
-- &sigma; = (x + m' * w + m * y) * U
-- if &sigma; = 1<sub>G1</sub> abort
+- <img src="https://render.githubusercontent.com/render/math?math=m = H_{\mathbb{Z}_q}(id)">
+- if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> abort
+- <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
+- if <img src="https://render.githubusercontent.com/render/math?math=m' = 0"> abort
+- <img src="https://render.githubusercontent.com/render/math?math=U = H_{\mathbb{G}_1}(m')">
+- if <img src="https://render.githubusercontent.com/render/math?math=U = 1_{\mathbb{G}_1}"> abort
+- <img src="https://render.githubusercontent.com/render/math?math=\sigma = (x %2B m'.w %2B m.y) \cdot U"> 
+- if <img src="https://render.githubusercontent.com/render/math?math=\sigma = 1_{\mathbb{G}_1}"> abort
 
-Output token is &sigma;
+Output token is <img src="https://render.githubusercontent.com/render/math?math=\sigma">
 
 ### Blinding factor
 
@@ -120,10 +123,10 @@ Blinding factors can be computed by using H<sub>G1</sub> on any arbitrary input.
 For example, the user could select a 6-digit pin that needs to be entered
 each time they want to use it. To require the pin to use the token, the following can be computed
 
-- B = H<sub>G1</sub>(pin)
-- &sigma;' = &sigma; - B
+- <img src="https://render.githubusercontent.com/render/math?math=B = H_{\mathbb{G}_1}(pin)">
+- <img src="https://render.githubusercontent.com/render/math?math=\sigma' = \sigma - B">
 
-Store &sigma;'
+Store <img src="https://render.githubusercontent.com/render/math?math=\sigma'">
 
 Multiple blinding factors can be applied in a similar manner. Each blinding factor
 can be different based on the platform where the token resides.
@@ -133,17 +136,17 @@ can be different based on the platform where the token resides.
 Verify takes a token and checks its validity. Meant to be run by the token holder
 since the token should never be disclosed to anyone.
 
-Verify(**pk**, **id**, &sigma;)
+Verify(<img src="https://render.githubusercontent.com/render/math?math=pk">, <img src="https://render.githubusercontent.com/render/math?math=id">, <img src="https://render.githubusercontent.com/render/math?math=\sigma">)
 
-- m = H<sub>q</sub>(**id**)
-- if m = 0 return false
-- m' = H<sub>q</sub>(m)
-- if m' = 0 return false
-- U = H<sub>G1</sub>(m')
-- if U = 1<sub>G1</sub> return false
-- return e(U, <span style="text-decoration:overline">X</span> + m * <span style="text-decoration:overline">Y</span> + m' * <span style="text-decoration:overline">W</span>) * e(&sigma;, -<span style="text-decoration:overline">P</span>) = 1<sub>GT</sub>
+- <img src="https://render.githubusercontent.com/render/math?math=m = H_{\mathbb{G}_1}(id)">
+- if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> return false
+- <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
+- if <img src="https://render.githubusercontent.com/render/math?math=m' = 0"> return false
+- <img src="https://render.githubusercontent.com/render/math?math=U = H_{\mathbb{G}_1}(m')">
+- if <img src="https://render.githubusercontent.com/render/math?math=U = 1_{\mathbb{G}_1}"> return false
+- return <img src="https://render.githubusercontent.com/render/math?math=e(U, \widetilde{X} %2B m \cdot \widetilde{Y} %2B m' \cdot \widetilde{W}) . e(\sigma, -\widetilde{P}) = 1_{\mathbb{G}_1}">
 
-m, m', and U can be cached by the holder for performance if desired in which case
+<img src="https://render.githubusercontent.com/render/math?math=m, m', U"> can be cached by the holder for performance if desired in which case
 those steps can be skipped.
 
 ### Prove
@@ -153,40 +156,45 @@ This allows the token to be reused while minimizing the risk of correlation.
 
 Below is the algorithm for Prove assuming a blind factor with a pin.
 
-Prove(&sigma;', **id**, [opt]n)
+Prove(<img src="https://render.githubusercontent.com/render/math?math=\sigma'">, <img src="https://render.githubusercontent.com/render/math?math=id">, [opt] <img src="https://render.githubusercontent.com/render/math?math=n">)
 
-- m = H<sub>q</sub>(**id**)
-- if m = 0 abort
-- m' = H<sub>q</sub>(m)
-- if m' = 0 abort
-- U = H<sub>G1</sub>(m')
-- if U = 1<sub>G1</sub> abort
-- if n &ne; &empty; ; d = n ; else d = Unix timestamp in milliseconds
-- t = H<sub>q</sub>(id || d)
-- r <span style="text-decoration: underline;">&larr;</span> Z<sub>q</sub>
-- U' = r * U
-- &pi; = t * U' + r * &sigma;' + r * B
+- <img src="https://render.githubusercontent.com/render/math?math=m = H_{\mathbb{Z}_q}(id)">
+- if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> abort
+- <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
+- if <img src="https://render.githubusercontent.com/render/math?math=m' = 0">  abort
+- <img src="https://render.githubusercontent.com/render/math?math=U = H_{\mathbb{G}_1}(m')">
+- if <img src="https://render.githubusercontent.com/render/math?math=U = 1_{\mathbb{G}_1}"> abort
+- if <img src="https://render.githubusercontent.com/render/math?math=n \ne \empty"> ; <img src="https://render.githubusercontent.com/render/math?math=d = n"> ; else <img src="https://render.githubusercontent.com/render/math?math=d = ">Unix timestamp in milliseconds
+- <img src="https://render.githubusercontent.com/render/math?math=r, t, tt \xleftarrow{\$} \mathbb{Z}_q*">
+- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{D} = t \cdot \widetilde{P}">
+- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{Dt} = tt \cdot \widetilde{P}">
+- <img src="https://render.githubusercontent.com/render/math?math=U' = r \cdot U">
+- <img src="https://render.githubusercontent.com/render/math?math=\pi = t \cdot U' %2B r \cdot \sigma' %2B r \cdot B">
+- <img src="https://render.githubusercontent.com/render/math?math=c = H_{\mathbb{Z}_q}(id || U' || \pi || \widetilde{D} || \widetilde{Dt} || d)">
+- <img src="https://render.githubusercontent.com/render/math?math=s = tt - c . t">
 
-Output &pi;, U', d, id
+Output <img src="https://render.githubusercontent.com/render/math?math=\tau = \pi, U', D, s, d, c, id">
 
 ### Open
 
 Open validates whether a proof is valid against a specific public key and is fresh enough.
 
-Open(**pk**, &pi;, U', d, id)
+Open(<img src="https://render.githubusercontent.com/render/math?math=pk">, <img src="https://render.githubusercontent.com/render/math?math=\tau">)
 
-- if U'= 1<sub>G1</sub> or &pi; = 1<sub>G1</sub> return false
-- if d is timestamp then now() - d < threshold return false
-- m = H<sub>q</sub>(**id**)
-- if m = 0 abort
-- m' = H<sub>q</sub>(m)
-- if m' = 0 abort
-- t = H<sub>q</sub>(id || d)
-- return e(U', <span style="text-decoration:overline">X</span> + m * <span style="text-decoration:overline">Y</span> + m' * <span style="text-decoration:overline">W</span> + t * <span style="text-decoration:overline">P</span>) * e(&pi;, -<span style="text-decoration:overline">P</span>) = 1<sub>GT</sub>
+- if <img src="https://render.githubusercontent.com/render/math?math=U' = 1_{\mathbb{G}_1}"> or <img src="https://render.githubusercontent.com/render/math?math=\pi = 1_{\mathbb{G}_1}"> return false
+- if <img src="https://render.githubusercontent.com/render/math?math=d">is timestamp then <img src="https://render.githubusercontent.com/render/math?math=Now - d < th"> return false
+- <img src="https://render.githubusercontent.com/render/math?math=m = H_{\mathbb{Z}_q}(id)"> 
+- if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> abort
+- <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
+- if <img src="https://render.githubusercontent.com/render/math?math=m' = 0"> abort
+- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{Dt} = s \cdot \widetilde{P} %2B c \cdot D">
+- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{c} = H_{\mathbb{Z}_q}(id || U' || \pi || \widetilde{D} || \widetilde{Dt} || d)">
+- if <img src="https://render.githubusercontent.com/render/math?math=\widetilde{c} \ne c"> return False
+- return <img src="https://render.githubusercontent.com/render/math?math=e(U', \widetilde{X} %2B m \cdot \widetilde{Y} %2B m' \cdot \widetilde{W} %2B D). e(\pi, -\widetilde{P}) = 1_{\mathbb{G}_T}">
 
 ## Other notes
 
-PS signatures support blind signatures methods such that **id** could be blinded before
+PS signatures support blind signatures methods such that <img src="https://render.githubusercontent.com/render/math?math=id"> could be blinded before
 being signed by the token issuer.
 
 They also support multiple attributes that can be added to the signature with the cost of an additional
