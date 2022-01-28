@@ -7,6 +7,7 @@ mod common;
 use common::{MockRng, ID};
 use oberon::{Blinding, Proof, PublicKey, SecretKey};
 use rand_core::RngCore;
+use subtle::Choice;
 
 #[test]
 fn proof_works() {
@@ -29,6 +30,13 @@ fn proof_works() {
     assert_eq!(proof.open(pk, ID, nonce).unwrap_u8(), 1u8);
     assert_eq!(proof.open(pk, b"wrong id", nonce).unwrap_u8(), 0u8);
     assert_eq!(proof.open(pk, ID, b"wrong nonce").unwrap_u8(), 0u8);
+
+    // check proof serde
+    let proof_bytes = proof.to_bytes();
+    let opt_proof = Proof::from_bytes(&proof_bytes);
+    assert_eq!(opt_proof.is_some().unwrap_u8(), 1u8);
+    let proof = opt_proof.unwrap();
+    assert_eq!(proof.open(pk, ID, nonce).unwrap_u8(), 1u8);
 
     // No blinding factor
     let opt_proof = Proof::new(&blinded_token, &[], ID, &nonce, &mut rng);
@@ -53,9 +61,9 @@ fn proof_works() {
             156, 175, 210, 75, 48, 91, 200, 173, 144, 234, 44, 63, 192, 146, 127, 49, 236, 147, 70,
             11, 72, 6, 85, 158, 94, 130, 141, 60, 69, 95, 236, 14, 173, 92, 54, 130, 73, 141, 15,
             64, 39, 219, 125, 28, 246, 176, 46, 66, 232, 25, 74, 86, 114, 92, 216, 126, 28, 140,
-            126, 92, 253, 164, 60, 177, 215, 122, 47, 44, 26, 227, 0, 169, 23, 219, 125, 28, 246,
-            176, 46, 66, 232, 25, 74, 86, 114, 92, 216, 126, 28, 140, 126, 92, 253, 164, 60, 177,
-            215, 122, 47, 44, 26, 227, 0, 169, 23
+            126, 92, 253, 164, 60, 177, 215, 122, 47, 44, 26, 227, 0, 169, 23, 234, 130, 106, 152,
+            241, 54, 235, 151, 186, 169, 30, 193, 169, 67, 131, 218, 214, 15, 128, 127, 35, 235,
+            189, 41, 199, 117, 169, 32, 249, 176, 0, 107
         ]
     );
 }
