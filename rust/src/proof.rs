@@ -170,7 +170,7 @@ impl Proof {
         out[48..96].copy_from_slice(&self.u_tick.to_affine().to_compressed());
         out[96..192].copy_from_slice(&self.commitment.to_affine().to_compressed());
         out[192..224].copy_from_slice(&self.challenge.to_bytes());
-        out[224..].copy_from_slice(&self.challenge.to_bytes());
+        out[224..].copy_from_slice(&self.schnorr.to_bytes());
         out
     }
 
