@@ -24,6 +24,9 @@ use subtle::{Choice, CtOption};
 pub struct Proof {
     proof: G1Projective,
     u_tick: G1Projective,
+    commitment: G2Projective,
+    challenge: Scalar,
+    schnorr: Scalar,
 }
 
 impl Default for Proof {
@@ -31,6 +34,9 @@ impl Default for Proof {
         Self {
             proof: G1Projective::identity(),
             u_tick: G1Projective::identity(),
+            commitment: G2Projective::identity(),
+            challenge: Scalar::zero(),
+            schnorr: Scalar::zero(),
         }
     }
 }
@@ -40,7 +46,7 @@ wasm_slice_impl!(Proof);
 
 impl Proof {
     /// The number of bytes in a proof
-    pub const BYTES: usize = 96;
+    pub const BYTES: usize = 256;
 
     /// Create a new ZKP based proof
     pub fn new<B: AsRef<[u8]>, N: AsRef<[u8]>>(
@@ -71,31 +77,43 @@ impl Proof {
             return None;
         }
 
-        let t = hash_to_scalar(&[id, nonce.as_ref()]);
-        let mut r = Scalar::random(&mut rng);
+        let t = gen_rnd_scalar(&mut rng);
+        let tt = gen_rnd_scalar(&mut rng);
+        let r = gen_rnd_scalar(&mut rng);
 
-        if t.is_zero() || t == Scalar::one() {
-            return None;
-        }
-        let mut attempts = 0;
-        while (r.is_zero() || r == Scalar::one()) && attempts < 100 {
-            attempts += 1;
-            r = Scalar::random(&mut rng);
-        }
-        if attempts == 100 {
-            return None;
-        }
-
+        let commitment = G2Projective::generator() * t;
+        let proving = G2Projective::generator() * tt;
         let u_tick = u * r;
         let (points, mut scalars, len) =
             get_points_and_scalars(&[u_tick, token.0], blindings, t, r);
         let proof = G1Projective::sum_of_products_in_place(&points[..len], &mut scalars[..len]);
-        Some(Self { proof, u_tick })
+        let challenge = hash_to_scalar(&[
+            id,
+            &u_tick.to_affine().to_compressed(),
+            &proof.to_affine().to_compressed(),
+            &commitment.to_affine().to_compressed(),
+            &proving.to_affine().to_compressed(),
+            nonce.as_ref(),
+        ]);
+        let schnorr = tt - challenge * t;
+
+        Some(Self {
+            proof,
+            u_tick,
+            commitment,
+            challenge,
+            schnorr,
+        })
     }
 
     /// Check whether this proof is valid
     pub fn open<B: AsRef<[u8]>, N: AsRef<[u8]>>(&self, pk: PublicKey, id: B, nonce: N) -> Choice {
-        if self.u_tick.is_identity().unwrap_u8() == 1 || self.proof.is_identity().unwrap_u8() == 1 {
+        if self.u_tick.is_identity().unwrap_u8() == 1
+            || self.proof.is_identity().unwrap_u8() == 1
+            || self.commitment.is_identity().unwrap_u8() == 1
+            || self.challenge.is_zero()
+            || self.schnorr.is_zero()
+        {
             return Choice::from(0u8);
         }
 
@@ -108,15 +126,30 @@ impl Proof {
         if m_tick.is_zero() {
             return Choice::from(0u8);
         }
+        let s = self.schnorr;
+        let c = self.challenge;
 
-        let t = hash_to_scalar(&[id, nonce.as_ref()]);
-        if t.is_zero() || t == Scalar::one() {
+        let proving = G2Projective::sum_of_products_in_place(
+            &[G2Projective::generator(), self.commitment],
+            &mut [s, c],
+        );
+
+        let challenge = hash_to_scalar(&[
+            id,
+            &self.u_tick.to_affine().to_compressed(),
+            &self.proof.to_affine().to_compressed(),
+            &self.commitment.to_affine().to_compressed(),
+            &proving.to_affine().to_compressed(),
+            nonce.as_ref(),
+        ]);
+
+        if challenge != self.challenge {
             return Choice::from(0u8);
         }
 
         let rhs = G2Projective::sum_of_products_in_place(
-            &[pk.w, pk.x, pk.y, G2Projective::generator()],
-            &mut [m_tick, Scalar::one(), m, t],
+            &[pk.w, pk.x, pk.y, self.commitment],
+            &mut [m_tick, Scalar::one(), m, Scalar::one()],
         );
 
         multi_miller_loop(&[
@@ -134,7 +167,10 @@ impl Proof {
     pub fn to_bytes(&self) -> [u8; Self::BYTES] {
         let mut out = [0u8; Self::BYTES];
         out[..48].copy_from_slice(&self.proof.to_affine().to_compressed());
-        out[48..].copy_from_slice(&self.u_tick.to_affine().to_compressed());
+        out[48..96].copy_from_slice(&self.u_tick.to_affine().to_compressed());
+        out[96..192].copy_from_slice(&self.commitment.to_affine().to_compressed());
+        out[192..224].copy_from_slice(&self.challenge.to_bytes());
+        out[224..].copy_from_slice(&self.challenge.to_bytes());
         out
     }
 
@@ -142,13 +178,43 @@ impl Proof {
     pub fn from_bytes(data: &[u8; Self::BYTES]) -> CtOption<Self> {
         let pp = G1Affine::from_compressed(&<[u8; 48]>::try_from(&data[..48]).unwrap())
             .map(G1Projective::from);
-        let uu = G1Affine::from_compressed(&<[u8; 48]>::try_from(&data[48..]).unwrap())
+        let uu = G1Affine::from_compressed(&<[u8; 48]>::try_from(&data[48..96]).unwrap())
             .map(G1Projective::from);
+        let commit = G2Affine::from_compressed(&<[u8; 96]>::try_from(&data[96..192]).unwrap())
+            .map(G2Projective::from);
+        let chal = Scalar::from_bytes(&<[u8; 32]>::try_from(&data[192..224]).unwrap());
+        let schn = Scalar::from_bytes(&<[u8; 32]>::try_from(&data[224..]).unwrap());
 
         pp.and_then(|proof| {
-            uu.and_then(|u_tick| CtOption::new(Self { proof, u_tick }, Choice::from(1u8)))
+            uu.and_then(|u_tick| {
+                commit.and_then(|commitment| {
+                    chal.and_then(|challenge| {
+                        schn.and_then(|schnorr| {
+                            let is_some: u8 = (!challenge.is_zero() && !schnorr.is_zero()).into();
+                            CtOption::new(
+                                Self {
+                                    proof,
+                                    u_tick,
+                                    commitment,
+                                    challenge,
+                                    schnorr,
+                                },
+                                is_some.into(),
+                            )
+                        })
+                    })
+                })
+            })
         })
     }
+}
+
+fn gen_rnd_scalar(mut rng: impl RngCore + CryptoRng) -> Scalar {
+    let mut s = Scalar::random(&mut rng);
+    while s.is_zero() || s == Scalar::one() {
+        s = Scalar::random(&mut rng);
+    }
+    s
 }
 
 #[cfg(not(any(feature = "alloc", feature = "std")))]
@@ -193,6 +259,4 @@ fn get_points_and_scalars(
 }
 
 #[test]
-fn vectors() {
-
-}
+fn vectors() {}
