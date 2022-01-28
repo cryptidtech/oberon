@@ -112,3 +112,7 @@ func reverseBytes(in []byte) []byte {
 func isValidPointG1(p *bls12381.PointG1) bool {
 	return g1.InCorrectSubgroup(p) && g1.IsOnCurve(p) && !g1.IsZero(p)
 }
+
+func isValidPointG2(p *bls12381.PointG2) bool {
+	return g2.InCorrectSubgroup(p) && g2.IsOnCurve(p) && !g2.IsZero(p)
+}

@@ -7,8 +7,12 @@ import (
 	"io"
 )
 
+const proofBytes = 256
+
 type Proof struct {
 	Proof, UTick *bls12381.PointG1
+	Commitment *bls12381.PointG2
+	Challenge, Schnorr *bls12381.Fr
 }
 
 func NewProof(token *Token, blindings []*Blinding, id, nonce []byte, rng io.Reader) (*Proof, error) {
@@ -35,28 +39,19 @@ func (p *Proof) Create(
 	if err != nil {
 		return err
 	}
-	t, err := hashToScalar([][]byte{id, nonce})
-	if err != nil {
-		return err
-	}
-	if t.IsZero() || t.IsOne() {
-		return fmt.Errorf("invalid t value")
-	}
-	r, err := bls12381.NewFr().Rand(rng)
-	if err != nil {
-		return err
-	}
-	attempts := 0
-	for ; (r.IsZero() || r.IsOne()) && attempts < 100; attempts++ {
-		r, err = bls12381.NewFr().Rand(rng)
-		if err != nil {
-			return err
-		}
-	}
-	if attempts == 100 {
-		return fmt.Errorf("invalid r value")
-	}
 
+	t, err := genRndScalar(rng)
+	if err != nil {
+		return err
+	}
+	tt, err := genRndScalar(rng)
+	if err != nil {
+		return err
+	}
+	r, err := genRndScalar(rng)
+	if err != nil {
+		return err
+	}
 	uTick := g1.MulScalar(g1.New(), u, r)
 	points := make([]*bls12381.PointG1, 0, 2+len(blindings))
 	scalars := make([]*bls12381.Fr, 0, 2+len(blindings))
@@ -77,8 +72,27 @@ func (p *Proof) Create(
 		return nil
 	}
 
+	commitment := g2.MulScalar(g2.New(), g2.One(), t)
+	proving := g2.MulScalar(g2.New(), g2.One(), tt)
+
+	challenge, err := hashToScalar([][]byte{
+		id,
+		g1.ToCompressed(uTick),
+		g1.ToCompressed(proof),
+		g2.ToCompressed(commitment),
+		g2.ToCompressed(proving),
+		nonce,
+	})
+	tv := new(bls12381.Fr)
+	tv.Mul(challenge, t)
+	schnorr := new(bls12381.Fr)
+	schnorr.Sub(tt, tv)
+
 	p.Proof = proof
 	p.UTick = uTick
+	p.Commitment = commitment
+	p.Challenge = challenge
+	p.Schnorr = schnorr
 	return nil
 }
 
@@ -88,8 +102,10 @@ func (p Proof) Open(
 ) error {
 	goodProof := isValidPointG1(p.Proof)
 	goodUTick := isValidPointG1(p.UTick)
+	goodComm := isValidPointG2(p.Commitment)
 
-	if !goodProof || !goodUTick {
+	if !goodProof || !goodUTick || !goodComm ||
+		p.Challenge.IsZero() || p.Schnorr.IsZero() {
 		return fmt.Errorf("invalid proof")
 	}
 
@@ -101,17 +117,30 @@ func (p Proof) Open(
 	if err != nil {
 		return err
 	}
-	t, err := hashToScalar([][]byte{id, nonce})
+
+	proving, err := g2.MultiExp(g2.New(),
+		[]*bls12381.PointG2{g2.One(), p.Commitment},
+		[]*bls12381.Fr{p.Schnorr, p.Challenge},
+	)
+
+	challenge, err := hashToScalar([][]byte{
+		id,
+		g1.ToCompressed(p.UTick),
+		g1.ToCompressed(p.Proof),
+		g2.ToCompressed(p.Commitment),
+		g2.ToCompressed(proving),
+		nonce,
+	})
 	if err != nil {
 		return err
 	}
-	if t.IsZero() || t.IsOne() {
-		return fmt.Errorf("invalid t value")
+	if challenge == nil || !challenge.Equal(p.Challenge) {
+		return fmt.Errorf("invalid challenge")
 	}
 
 	rhs, err := g2.MultiExp(g2.New(),
-		[]*bls12381.PointG2{pk.W, pk.X, pk.Y, genG2},
-		[]*bls12381.Fr{mTick, bls12381.NewFr().One(), m, t})
+		[]*bls12381.PointG2{pk.W, pk.X, pk.Y, p.Commitment},
+		[]*bls12381.Fr{mTick, bls12381.NewFr().One(), m, bls12381.NewFr().One()})
 	if err != nil {
 		return err
 	}
@@ -126,29 +155,43 @@ func (p Proof) Open(
 }
 
 func (p Proof) MarshalBinary() ([]byte, error) {
-	var tmp [96]byte
+	var tmp [proofBytes]byte
 	copy(tmp[:48], g1.ToCompressed(p.Proof))
-	copy(tmp[48:], g1.ToCompressed(p.UTick))
+	copy(tmp[48:96], g1.ToCompressed(p.UTick))
+	copy(tmp[96:192], g2.ToCompressed(p.Commitment))
+	copy(tmp[192:224], reverseBytes(p.Challenge.ToBytes()))
+	copy(tmp[224:], reverseBytes(p.Schnorr.ToBytes()))
 	return tmp[:], nil
 }
 
 func (p *Proof) UnmarshalBinary(in []byte) error {
-	if len(in) != 96 {
+	if len(in) != proofBytes {
 		return fmt.Errorf("invalid length")
 	}
 	proof, err := g1.FromCompressed(in[:48])
 	if err != nil {
 		return nil
 	}
-	uTick, err := g1.FromCompressed(in[48:])
+	uTick, err := g1.FromCompressed(in[48:96])
 	if err != nil {
 		return nil
 	}
+	commitment, err := g2.FromCompressed(in[96:192])
+	if err != nil {
+		return nil
+	}
+	challenge := bls12381.NewFr().FromBytes(reverseBytes(in[192:224]))
+	schnorr := bls12381.NewFr().FromBytes(reverseBytes(in[224:]))
 	goodProof := isValidPointG1(proof)
 	goodUTick := isValidPointG1(uTick)
-	if goodProof && goodUTick {
+	goodComm := isValidPointG2(commitment)
+
+	if goodProof && goodUTick && goodComm && !challenge.IsZero() && !schnorr.IsZero() {
 		p.Proof = proof
 		p.UTick = uTick
+		p.Commitment = commitment
+		p.Challenge = challenge
+		p.Schnorr = schnorr
 		return nil
 	}
 	return fmt.Errorf("invalid proof")
@@ -158,6 +201,9 @@ func (p Proof) MarshalText() ([]byte, error) {
 	tmp := map[string][]byte{
 		"proof":  g1.ToCompressed(p.Proof),
 		"u_tick": g1.ToCompressed(p.UTick),
+		"commitment": g2.ToCompressed(p.Commitment),
+		"challenge": reverseBytes(p.Challenge.ToBytes()),
+		"schnorr": reverseBytes(p.Schnorr.ToBytes()),
 	}
 	return json.Marshal(&tmp)
 }
@@ -165,6 +211,8 @@ func (p Proof) MarshalText() ([]byte, error) {
 func (p *Proof) UnmarshalText(in []byte) error {
 	var tmp map[string][]byte
 	var proof, uTick *bls12381.PointG1
+	var commitment *bls12381.PointG2
+	var challenge, schnorr *bls12381.Fr
 
 	err := json.Unmarshal(in, &tmp)
 	if err != nil {
@@ -187,13 +235,45 @@ func (p *Proof) UnmarshalText(in []byte) error {
 	} else {
 		return fmt.Errorf("missing expected map key 'u_tick'")
 	}
+	if commitmentBytes, ok := tmp["commitment"]; ok {
+		commitment, err = g2.FromCompressed(commitmentBytes)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("missing expected mak key 'commitment'")
+	}
+	if challengeBytes, ok := tmp["challenge"]; ok {
+		challenge = bls12381.NewFr().FromBytes(reverseBytes(challengeBytes))
+	}
+	if schnorrBytes, ok := tmp["schnorr"]; ok {
+		schnorr = bls12381.NewFr().FromBytes(reverseBytes(schnorrBytes))
+	}
 
 	goodProof := isValidPointG1(proof)
 	goodUTick := isValidPointG1(uTick)
-	if goodProof && goodUTick {
+	goodComm := isValidPointG2(commitment)
+	if goodProof && goodUTick && goodComm && !challenge.IsZero() && !schnorr.IsZero() {
 		p.Proof = proof
 		p.UTick = uTick
+		p.Commitment = commitment
+		p.Challenge = challenge
+		p.Schnorr = schnorr
 		return nil
 	}
 	return fmt.Errorf("invalid proof")
+}
+
+func genRndScalar(rng io.Reader) (*bls12381.Fr, error) {
+	s, e := bls12381.NewFr().Rand(rng)
+	if e != nil {
+		return nil, e
+	}
+	for ; s.IsZero() || s.IsOne(); {
+		s, e = bls12381.NewFr().Rand(rng)
+		if e != nil {
+			return nil, e
+		}
+	}
+	return s, nil
 }

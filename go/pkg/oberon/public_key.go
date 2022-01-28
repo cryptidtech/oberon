@@ -118,6 +118,3 @@ func (p *PublicKey) UnmarshalText(in []byte) error {
 	return fmt.Errorf("invalid secret key")
 }
 
-func isValidPointG2(p *bls12381.PointG2) bool {
-	return g2.InCorrectSubgroup(p) && g2.IsOnCurve(p) && !g2.IsZero(p)
-}
