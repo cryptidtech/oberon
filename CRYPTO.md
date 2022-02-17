@@ -173,7 +173,7 @@ Prove(<img src="https://render.githubusercontent.com/render/math?math=\sigma'">,
 - <img src="https://render.githubusercontent.com/render/math?math=c = H_{\mathbb{Z}_q}(id || U' || \pi || \widetilde{D} || \widetilde{Dt} || d)">
 - <img src="https://render.githubusercontent.com/render/math?math=s = tt - c . t">
 
-Output <img src="https://render.githubusercontent.com/render/math?math=\tau = \pi, U', D, s, d, c, id">
+Output <img src="https://render.githubusercontent.com/render/math?math=\tau = \pi, U', \widetilde{D}, s, d, c, id">
 
 ### Open
 
@@ -187,10 +187,10 @@ Open(<img src="https://render.githubusercontent.com/render/math?math=pk">, <img 
 - if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> abort
 - <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
 - if <img src="https://render.githubusercontent.com/render/math?math=m' = 0"> abort
-- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{Dt} = s \cdot \widetilde{P} %2B c \cdot D">
+- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{Dt} = s \cdot \widetilde{P} %2B c \cdot \widetilde{D}">
 - <img src="https://render.githubusercontent.com/render/math?math=\widetilde{c} = H_{\mathbb{Z}_q}(id || U' || \pi || \widetilde{D} || \widetilde{Dt} || d)">
 - if <img src="https://render.githubusercontent.com/render/math?math=\widetilde{c} \ne c"> return False
-- return <img src="https://render.githubusercontent.com/render/math?math=e(U', \widetilde{X} %2B m \cdot \widetilde{Y} %2B m' \cdot \widetilde{W} %2B D). e(\pi, -\widetilde{P}) = 1_{\mathbb{G}_T}">
+- return <img src="https://render.githubusercontent.com/render/math?math=e(U', \widetilde{X} %2B m \cdot \widetilde{Y} %2B m' \cdot \widetilde{W} %2B \widetilde{D}). e(\pi, -\widetilde{P}) = 1_{\mathbb{G}_T}">
 
 ## Other notes
 
