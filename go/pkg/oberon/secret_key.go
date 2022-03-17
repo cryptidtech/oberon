@@ -3,31 +3,37 @@ package oberon
 import (
 	"encoding/json"
 	"fmt"
-	bls12381 "github.com/mikelodder7/bls12-381"
+	"github.com/coinbase/kryptology/pkg/core/curves"
+	"github.com/coinbase/kryptology/pkg/core/curves/native"
+	"github.com/coinbase/kryptology/pkg/core/curves/native/bls12381"
 	"golang.org/x/crypto/sha3"
 	"io"
 )
 
 type SecretKey struct {
-	W *bls12381.Fr
-	X *bls12381.Fr
-	Y *bls12381.Fr
+	W *curves.ScalarBls12381
+	X *curves.ScalarBls12381
+	Y *curves.ScalarBls12381
 }
 
 func NewSecretKey(reader io.Reader) (*SecretKey, error) {
-	w, err := bls12381.NewFr().Rand(reader)
-	if err != nil {
-		return nil, err
+	curve := curves.BLS12381G2()
+	w := curve.NewScalar().Random(reader)
+	if w == nil {
+		return nil, fmt.Errorf("unable to create secret key")
 	}
-	x, err := bls12381.NewFr().Rand(reader)
-	if err != nil {
-		return nil, err
+	x := curve.NewScalar().Random(reader)
+	if x == nil {
+		return nil, fmt.Errorf("unable to create secret key")
 	}
-	y, err := bls12381.NewFr().Rand(reader)
-	if err != nil {
-		return nil, err
+	y := curve.NewScalar().Random(reader)
+	if y == nil {
+		return nil, fmt.Errorf("unable to create secret key")
 	}
-	return &SecretKey{w, x, y}, nil
+	W, _ := w.(*curves.ScalarBls12381)
+	X, _ := x.(*curves.ScalarBls12381)
+	Y, _ := y.(*curves.ScalarBls12381)
+	return &SecretKey{W, X, Y}, nil
 }
 
 func HashSecretKey(data []byte) (*SecretKey, error) {
@@ -47,7 +53,7 @@ func HashSecretKey(data []byte) (*SecretKey, error) {
 		return nil, fmt.Errorf("unable to write %d bytes", len(data))
 	}
 
-	var tmp [3]*bls12381.Fr
+	var tmp [3]*curves.ScalarBls12381
 	var scalar [48]byte
 	for i := 0; i < 3; i++ {
 		n, err = hasher.Read(scalar[:])
@@ -66,18 +72,9 @@ func HashSecretKey(data []byte) (*SecretKey, error) {
 }
 
 func (s SecretKey) PublicKey() *PublicKey {
-	w := g2.One()
-	x := g2.One()
-	y := g2.One()
-
-	g2.MulScalar(w, w, s.W)
-	g2.MulScalar(x, x, s.X)
-	g2.MulScalar(y, y, s.Y)
-	return &PublicKey{
-		W: w,
-		X: x,
-		Y: y,
-	}
+	pk := new(PublicKey)
+	pk.FromSecretKey(&s)
+	return pk
 }
 
 func (s *SecretKey) Sign(id []byte) (*Token, error) {
@@ -91,9 +88,9 @@ func (s *SecretKey) Sign(id []byte) (*Token, error) {
 
 func (s SecretKey) MarshalBinary() ([]byte, error) {
 	var tmp [96]byte
-	copy(tmp[:32], reverseBytes(s.W.ToBytes()))
-	copy(tmp[32:64], reverseBytes(s.X.ToBytes()))
-	copy(tmp[64:96], reverseBytes(s.Y.ToBytes()))
+	copy(tmp[:32], s.W.Bytes())
+	copy(tmp[32:64], s.X.Bytes())
+	copy(tmp[64:96], s.Y.Bytes())
 	return tmp[:], nil
 }
 
@@ -101,56 +98,104 @@ func (s *SecretKey) UnmarshalBinary(in []byte) error {
 	if len(in) != 96 {
 		return fmt.Errorf("invalid length")
 	}
-	s.W = bls12381.NewFr().FromBytes(reverseBytes(in[:32]))
-	s.X = bls12381.NewFr().FromBytes(reverseBytes(in[32:64]))
-	s.Y = bls12381.NewFr().FromBytes(reverseBytes(in[64:96]))
-	if s.W.IsZero() || s.X.IsZero() || s.Y.IsZero() {
+	var t [native.FieldBytes]byte
+	copy(t[:], in[:32])
+	curve := curves.BLS12381G2()
+	w, err := bls12381.Bls12381FqNew().SetBytes(&t)
+	if err != nil {
+		return err
+	}
+	copy(t[:], in[32:64])
+	x, err := bls12381.Bls12381FqNew().SetBytes(&t)
+	if err != nil {
+		return err
+	}
+	copy(t[:], in[64:96])
+	y, err := bls12381.Bls12381FqNew().SetBytes(&t)
+	if err != nil {
+		return err
+	}
+	if w.IsZero()|x.IsZero()|y.IsZero() == 1 {
 		return fmt.Errorf("invalid secret key")
 	}
+	s.W, _ = curve.NewScalar().(*curves.ScalarBls12381)
+	s.X, _ = curve.NewScalar().(*curves.ScalarBls12381)
+	s.Y, _ = curve.NewScalar().(*curves.ScalarBls12381)
+	s.W.Value = w
+	s.X.Value = x
+	s.Y.Value = y
 	return nil
 }
 
 func (s SecretKey) MarshalText() ([]byte, error) {
 	tmp := map[string][]byte{
-		"w": reverseBytes(s.W.ToBytes()),
-		"x": reverseBytes(s.X.ToBytes()),
-		"y": reverseBytes(s.Y.ToBytes()),
+		"w": s.W.Bytes(),
+		"x": s.X.Bytes(),
+		"y": s.Y.Bytes(),
 	}
 	return json.Marshal(&tmp)
 }
 
 func (s *SecretKey) UnmarshalText(in []byte) error {
 	var tmp map[string][]byte
-	var w, x, y *bls12381.Fr
+	var w, x, y *native.Field
+	var t [native.FieldBytes]byte
 
+	curve := curves.BLS12381G2()
 	err := json.Unmarshal(in, &tmp)
 	if err != nil {
 		return err
 	}
 	if wBytes, ok := tmp["w"]; ok {
-		w = bls12381.NewFr().FromBytes(reverseBytes(wBytes))
+		if len(wBytes) != native.FieldBytes {
+			return fmt.Errorf("invalid byte sequence")
+		}
+		copy(t[:], wBytes)
+		w, err = bls12381.Bls12381FqNew().SetBytes(&t)
+		if err != nil {
+			return err
+		}
 	} else {
 		return fmt.Errorf("missing expected map key 'w'")
 	}
 
 	if xBytes, ok := tmp["x"]; ok {
-		x = bls12381.NewFr().FromBytes(reverseBytes(xBytes))
+		if len(xBytes) != native.FieldBytes {
+			return fmt.Errorf("invalid byte sequence")
+		}
+		copy(t[:], xBytes)
+		x, err = bls12381.Bls12381FqNew().SetBytes(&t)
+		if err != nil {
+			return err
+		}
 	} else {
 		return fmt.Errorf("missing expected map key 'x'")
 	}
 
 	if yBytes, ok := tmp["y"]; ok {
-		y = bls12381.NewFr().FromBytes(reverseBytes(yBytes))
+		if len(yBytes) != native.FieldBytes {
+			return fmt.Errorf("invalid byte sequence")
+		}
+		copy(t[:], yBytes)
+		y, err = bls12381.Bls12381FqNew().SetBytes(&t)
+		if err != nil {
+			return err
+		}
 	} else {
 		return fmt.Errorf("missing expected map key 'y'")
 	}
 
-	s.W = w
-	s.X = x
-	s.Y = y
-
-	if s.W.IsZero() || s.X.IsZero() || s.Y.IsZero() {
+	if w.IsZero()|x.IsZero()|y.IsZero() == 1 {
 		return fmt.Errorf("invalid secret key")
 	}
+
+	s.W, _ = curve.NewScalar().(*curves.ScalarBls12381)
+	s.X, _ = curve.NewScalar().(*curves.ScalarBls12381)
+	s.Y, _ = curve.NewScalar().(*curves.ScalarBls12381)
+
+	s.W.Value = w
+	s.X.Value = x
+	s.Y.Value = y
+
 	return nil
 }

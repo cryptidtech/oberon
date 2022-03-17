@@ -18,9 +18,9 @@ func TestSecretKey_MarshalBinary(t *testing.T) {
 	testKey2 := new(SecretKey)
 	err = testKey2.UnmarshalBinary(tmp)
 	require.NoError(t, err)
-	require.True(t, testKey.W.Equal(testKey2.W))
-	require.True(t, testKey.X.Equal(testKey2.X))
-	require.True(t, testKey.Y.Equal(testKey2.Y))
+	require.Equal(t, 1, testKey.W.Value.Equal(testKey2.W.Value))
+	require.Equal(t, 1, testKey.X.Value.Equal(testKey2.X.Value))
+	require.Equal(t, 1, testKey.Y.Value.Equal(testKey2.Y.Value))
 }
 
 func TestSecretKey_MarshalText(t *testing.T) {
@@ -34,9 +34,9 @@ func TestSecretKey_MarshalText(t *testing.T) {
 	testKey2 := new(SecretKey)
 	err = testKey2.UnmarshalText(tmp)
 	require.NoError(t, err)
-	require.True(t, testKey.W.Equal(testKey2.W))
-	require.True(t, testKey.X.Equal(testKey2.X))
-	require.True(t, testKey.Y.Equal(testKey2.Y))
+	require.Equal(t, 1, testKey.W.Value.Equal(testKey2.W.Value))
+	require.Equal(t, 1, testKey.X.Value.Equal(testKey2.X.Value))
+	require.Equal(t, 1, testKey.Y.Value.Equal(testKey2.Y.Value))
 }
 
 func TestSecretKey_UnmarshalBinary(t *testing.T) {
@@ -59,6 +59,6 @@ func TestHashSecretKey(t *testing.T) {
 	require.NoError(t, err)
 	out, err := sk.MarshalBinary()
 	require.NoError(t, err)
-	expBytes := []byte{132, 134, 52, 39, 104, 194, 25, 230, 216, 42, 0, 63, 34, 54, 107, 231, 82, 166, 247, 224, 33, 36, 218, 239, 81, 144, 152, 175, 106, 143, 129, 6, 122, 192, 119, 97, 255, 119, 247, 135, 208, 177, 81, 210, 179, 111, 141, 72, 32, 87, 81, 207, 39, 39, 24, 91, 125, 206, 144, 53, 124, 67, 100, 86, 107, 124, 135, 14, 83, 6, 145, 211, 0, 7, 82, 131, 174, 107, 136, 56, 235, 54, 81, 165, 243, 235, 216, 215, 95, 164, 31, 48, 118, 118, 67, 37}
+	expBytes := []byte{6, 129, 143, 106, 175, 152, 144, 81, 239, 218, 36, 33, 224, 247, 166, 82, 231, 107, 54, 34, 63, 0, 42, 216, 230, 25, 194, 104, 39, 52, 134, 132, 86, 100, 67, 124, 53, 144, 206, 125, 91, 24, 39, 39, 207, 81, 87, 32, 72, 141, 111, 179, 210, 81, 177, 208, 135, 247, 119, 255, 97, 119, 192, 122, 37, 67, 118, 118, 48, 31, 164, 95, 215, 216, 235, 243, 165, 81, 54, 235, 56, 136, 107, 174, 131, 82, 7, 0, 211, 145, 6, 83, 14, 135, 124, 107}
 	require.Equal(t, 0, bytes.Compare(out, expBytes))
 }

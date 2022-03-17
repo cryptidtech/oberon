@@ -19,7 +19,7 @@ func TestValidToken(t *testing.T) {
 	}
 	token, err := sk.Sign(testId)
 	require.NoError(t, err)
-	require.Equal(t, expToken, g1.ToCompressed(token.Value))
+	require.Equal(t, expToken, token.Value.ToAffineCompressed())
 	require.NoError(t, token.Verify(pk, testId))
 	require.Error(t, token.Verify(pk, []byte("wrong identity")))
 }

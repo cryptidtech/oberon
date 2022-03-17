@@ -1,19 +1,19 @@
 package oberon
 
 import (
-	"encoding/binary"
 	"fmt"
-	bls12381 "github.com/mikelodder7/bls12-381"
+	"github.com/coinbase/kryptology/pkg/core/curves"
+	"github.com/coinbase/kryptology/pkg/core/curves/native"
+	"github.com/coinbase/kryptology/pkg/core/curves/native/bls12381"
 	"golang.org/x/crypto/sha3"
 )
 
 var (
-	f2192       = &bls12381.Fr{0, 0, 0, 1}
 	toScalarDst = []byte("OBERON_BLS12381FQ_XOF:SHAKE-256_")
 	toCurveDst  = []byte("OBERON_BLS12381G1_XOF:SHAKE-256_SSWU_RO_")
 )
 
-func computeM(id []byte) (*bls12381.Fr, error) {
+func computeM(id []byte) (*curves.ScalarBls12381, error) {
 	m, err := hashToScalar([][]byte{id})
 	if err != nil {
 		return nil, err
@@ -24,8 +24,8 @@ func computeM(id []byte) (*bls12381.Fr, error) {
 	return m, nil
 }
 
-func computeMTick(m *bls12381.Fr) (*bls12381.Fr, error) {
-	mTick, err := hashToScalar([][]byte{reverseBytes(m.ToBytes())})
+func computeMTick(m *curves.ScalarBls12381) (*curves.ScalarBls12381, error) {
+	mTick, err := hashToScalar([][]byte{reverseBytes(m.Bytes())})
 	if err != nil {
 		return nil, err
 	}
@@ -35,8 +35,8 @@ func computeMTick(m *bls12381.Fr) (*bls12381.Fr, error) {
 	return mTick, nil
 }
 
-func computeU(mTick *bls12381.Fr) (*bls12381.PointG1, error) {
-	u, err := hashToCurve(reverseBytes(mTick.ToBytes()))
+func computeU(mTick *curves.ScalarBls12381) (*curves.PointBls12381G1, error) {
+	u, err := hashToCurve(reverseBytes(mTick.Bytes()))
 	if err != nil {
 		return nil, err
 	}
@@ -46,11 +46,13 @@ func computeU(mTick *bls12381.Fr) (*bls12381.PointG1, error) {
 	return u, nil
 }
 
-func hashToCurve(data []byte) (*bls12381.PointG1, error) {
-	return g1.HashToCurve(bls12381.HashToFpXOFSHAKE256, data, toCurveDst)
+func hashToCurve(data []byte) (*curves.PointBls12381G1, error) {
+	pt := curves.BLS12381G1().NewIdentityPoint().(*curves.PointBls12381G1)
+	pt.Value = new(bls12381.G1).Hash(native.EllipticPointHasherShake256(), data, toCurveDst)
+	return pt, nil
 }
 
-func hashToScalar(data [][]byte) (*bls12381.Fr, error) {
+func hashToScalar(data [][]byte) (*curves.ScalarBls12381, error) {
 	hasher := sha3.NewShake256()
 	n, err := hasher.Write(toScalarDst)
 	if err != nil {
@@ -80,22 +82,12 @@ func hashToScalar(data [][]byte) (*bls12381.Fr, error) {
 	return fromOkm(scalar[:]), nil
 }
 
-func fromOkm(scalar []byte) *bls12381.Fr {
-	d0 := &bls12381.Fr{
-		binary.BigEndian.Uint64(scalar[16:24]),
-		binary.BigEndian.Uint64(scalar[8:16]),
-		binary.BigEndian.Uint64(scalar[:8]),
-		0,
-	}
-	d1 := &bls12381.Fr{
-		binary.BigEndian.Uint64(scalar[40:48]),
-		binary.BigEndian.Uint64(scalar[32:40]),
-		binary.BigEndian.Uint64(scalar[24:32]),
-		0,
-	}
-	sc := bls12381.NewFr()
-	sc.Mul(d0, f2192)
-	sc.Add(sc, d1)
+func fromOkm(scalar []byte) *curves.ScalarBls12381 {
+	var t [64]byte
+	copy(t[:48], reverseBytes(scalar))
+	value := bls12381.Bls12381FqNew().SetBytesWide(&t)
+	sc := curves.BLS12381G1().NewScalar().(*curves.ScalarBls12381)
+	sc.Value = value
 	return sc
 }
 
@@ -109,10 +101,18 @@ func reverseBytes(in []byte) []byte {
 	return out
 }
 
-func isValidPointG1(p *bls12381.PointG1) bool {
-	return g1.InCorrectSubgroup(p) && g1.IsOnCurve(p) && !g1.IsZero(p)
+func isValidPointG1(p *curves.PointBls12381G1) bool {
+	id := p.Value.IsIdentity()
+	// if id == 1 then t == 0
+	// if id == 0 then t == 1
+	t := -id + 1
+	return p.Value.IsOnCurve()&p.Value.InCorrectSubgroup()&t == 1
 }
 
-func isValidPointG2(p *bls12381.PointG2) bool {
-	return g2.InCorrectSubgroup(p) && g2.IsOnCurve(p) && !g2.IsZero(p)
+func isValidPointG2(p *curves.PointBls12381G2) bool {
+	id := p.Value.IsIdentity()
+	// if id == 1 then t == 0
+	// if id == 0 then t == 1
+	t := -id + 1
+	return p.Value.IsOnCurve()&p.Value.InCorrectSubgroup()&t == 1
 }

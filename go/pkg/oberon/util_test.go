@@ -21,6 +21,6 @@ func TestHashToCurve(t *testing.T) {
 	for i, v := range testVectors {
 		p, err := hashToCurve(v)
 		require.NoError(t, err)
-		require.Equal(t, testExp[i], g1.ToCompressed(p))
+		require.Equal(t, testExp[i], p.ToAffineCompressed())
 	}
 }

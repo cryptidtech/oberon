@@ -3,11 +3,11 @@ package oberon
 import (
 	"encoding/json"
 	"fmt"
-	bls12381 "github.com/mikelodder7/bls12-381"
+	"github.com/coinbase/kryptology/pkg/core/curves"
 )
 
 type Blinding struct {
-	Value *bls12381.PointG1
+	Value *curves.PointBls12381G1
 }
 
 func NewBlinding(data []byte) (*Blinding, error) {
@@ -26,23 +26,23 @@ func (b *Blinding) Create(data []byte) error {
 }
 
 func (b Blinding) MarshalBinary() ([]byte, error) {
-	return g1.ToCompressed(b.Value), nil
+	return b.Value.ToAffineCompressed(), nil
 }
 
 func (b *Blinding) UnmarshalBinary(data []byte) error {
-	p, err := g1.FromCompressed(data)
+	pt, err := curves.BLS12381G1().NewIdentityPoint().FromAffineCompressed(data)
 	if err != nil {
 		return err
 	}
-	if !isValidPointG1(p) {
+	if pt.IsIdentity() {
 		return fmt.Errorf("invalid token")
 	}
-	b.Value = p
+	b.Value, _ = pt.(*curves.PointBls12381G1)
 	return nil
 }
 
 func (b Blinding) MarshalText() ([]byte, error) {
-	return json.Marshal(g1.ToCompressed(b.Value))
+	return json.Marshal(b.Value.ToAffineCompressed())
 }
 
 func (b *Blinding) UnmarshalText(in []byte) error {
@@ -51,5 +51,10 @@ func (b *Blinding) UnmarshalText(in []byte) error {
 	if err != nil {
 		return err
 	}
-	return b.UnmarshalBinary(data[:])
+	pt, err := curves.BLS12381G1().NewIdentityPoint().FromAffineCompressed(data[:])
+	if err != nil {
+		return err
+	}
+	b.Value, _ = pt.(*curves.PointBls12381G1)
+	return nil
 }

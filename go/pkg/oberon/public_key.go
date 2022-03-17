@@ -3,19 +3,13 @@ package oberon
 import (
 	"encoding/json"
 	"fmt"
-	bls12381 "github.com/mikelodder7/bls12-381"
-)
-
-var (
-	g1    = bls12381.NewG1()
-	g2    = bls12381.NewG2()
-	genG2 = g2.One()
+	"github.com/coinbase/kryptology/pkg/core/curves"
 )
 
 type PublicKey struct {
-	W *bls12381.PointG2
-	X *bls12381.PointG2
-	Y *bls12381.PointG2
+	W *curves.PointBls12381G2
+	X *curves.PointBls12381G2
+	Y *curves.PointBls12381G2
 }
 
 func (p *PublicKey) Verify(id []byte, t *Token) error {
@@ -23,39 +17,46 @@ func (p *PublicKey) Verify(id []byte, t *Token) error {
 }
 
 func (p *PublicKey) FromSecretKey(sk *SecretKey) {
-	p.W = g2.MulScalar(g2.New(), g2.One(), sk.W)
-	p.X = g2.MulScalar(g2.New(), g2.One(), sk.X)
-	p.Y = g2.MulScalar(g2.New(), g2.One(), sk.Y)
+	curve := curves.BLS12381G2()
+	p.W, _ = curve.ScalarBaseMult(sk.W).(*curves.PointBls12381G2)
+	p.X, _ = curve.ScalarBaseMult(sk.X).(*curves.PointBls12381G2)
+	p.Y, _ = curve.ScalarBaseMult(sk.Y).(*curves.PointBls12381G2)
 }
 
 func (p PublicKey) MarshalBinary() ([]byte, error) {
-	return append(append(g2.ToCompressed(p.W), g2.ToCompressed(p.X)...), g2.ToCompressed(p.Y)...), nil
+	return append(append(p.W.ToAffineCompressed(), p.X.ToAffineCompressed()...), p.Y.ToAffineCompressed()...), nil
 }
 
 func (p *PublicKey) UnmarshalBinary(in []byte) error {
 	if len(in) != 288 {
 		return fmt.Errorf("invalid length")
 	}
-	w, err := g2.FromCompressed(in[:96])
+	curve := curves.BLS12381G2()
+	w, err := curve.Point.FromAffineCompressed(in[:96])
 	if err != nil {
 		return err
 	}
-	x, err := g2.FromCompressed(in[96:192])
+	x, err := curve.Point.FromAffineCompressed(in[96:192])
 	if err != nil {
 		return err
 	}
-	y, err := g2.FromCompressed(in[192:])
+	y, err := curve.Point.FromAffineCompressed(in[192:])
 	if err != nil {
 		return err
 	}
 
-	goodW := isValidPointG2(w)
-	goodX := isValidPointG2(x)
-	goodY := isValidPointG2(y)
+	W, _ := w.(*curves.PointBls12381G2)
+	X, _ := x.(*curves.PointBls12381G2)
+	Y, _ := y.(*curves.PointBls12381G2)
+
+	goodW := !w.IsIdentity()
+	goodX := !x.IsIdentity()
+	goodY := !y.IsIdentity()
+
 	if goodW && goodX && goodY {
-		p.W = w
-		p.X = x
-		p.Y = y
+		p.W = W
+		p.X = X
+		p.Y = Y
 		return nil
 	}
 	return fmt.Errorf("invalid public key")
@@ -63,58 +64,62 @@ func (p *PublicKey) UnmarshalBinary(in []byte) error {
 
 func (p PublicKey) MarshalText() ([]byte, error) {
 	tmp := map[string][]byte{
-		"w": g2.ToCompressed(p.W),
-		"x": g2.ToCompressed(p.X),
-		"y": g2.ToCompressed(p.Y),
+		"w": p.W.ToAffineCompressed(),
+		"x": p.X.ToAffineCompressed(),
+		"y": p.Y.ToAffineCompressed(),
 	}
 	return json.Marshal(&tmp)
 }
 
 func (p *PublicKey) UnmarshalText(in []byte) error {
 	var tmp map[string][]byte
-	var w, x, y *bls12381.PointG2
+	var w, x, y curves.Point
 
+	curve := curves.BLS12381G2()
 	err := json.Unmarshal(in, &tmp)
 	if err != nil {
 		return err
 	}
 	if wBytes, ok := tmp["w"]; ok {
-		w, err = g2.FromCompressed(wBytes)
+		w, err = curve.NewIdentityPoint().FromAffineCompressed(wBytes)
 		if err != nil {
-			return nil
+			return err
 		}
 	} else {
 		return fmt.Errorf("missing expected map key 'w'")
 	}
 
 	if xBytes, ok := tmp["x"]; ok {
-		x, err = g2.FromCompressed(xBytes)
+		x, err = curve.NewIdentityPoint().FromAffineCompressed(xBytes)
 		if err != nil {
-			return nil
+			return err
 		}
 	} else {
 		return fmt.Errorf("missing expected map key 'x'")
 	}
 
 	if yBytes, ok := tmp["y"]; ok {
-		y, err = g2.FromCompressed(yBytes)
+		y, err = curve.NewIdentityPoint().FromAffineCompressed(yBytes)
 		if err != nil {
-			return nil
+			return err
 		}
 	} else {
 		return fmt.Errorf("missing expected map key 'y'")
 	}
 
-	goodW := isValidPointG2(w)
-	goodX := isValidPointG2(x)
-	goodY := isValidPointG2(y)
+	W, _ := w.(*curves.PointBls12381G2)
+	X, _ := x.(*curves.PointBls12381G2)
+	Y, _ := y.(*curves.PointBls12381G2)
+
+	goodW := !w.IsIdentity()
+	goodX := !x.IsIdentity()
+	goodY := !y.IsIdentity()
 
 	if goodW && goodX && goodY {
-		p.W = w
-		p.X = x
-		p.Y = y
+		p.W = W
+		p.X = X
+		p.Y = Y
 		return nil
 	}
 	return fmt.Errorf("invalid secret key")
 }
-

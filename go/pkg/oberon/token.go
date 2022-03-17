@@ -3,11 +3,12 @@ package oberon
 import (
 	"encoding/json"
 	"fmt"
-	bls12381 "github.com/mikelodder7/bls12-381"
+	"github.com/coinbase/kryptology/pkg/core/curves"
+	"github.com/coinbase/kryptology/pkg/core/curves/native/bls12381"
 )
 
 type Token struct {
-	Value *bls12381.PointG1
+	Value *curves.PointBls12381G1
 }
 
 func NewToken(sk *SecretKey, id []byte) (*Token, error) {
@@ -31,16 +32,12 @@ func (t *Token) Create(sk *SecretKey, id []byte) error {
 		return err
 	}
 
-	e := bls12381.NewFr()
-	tv1 := bls12381.NewFr()
-	tv2 := bls12381.NewFr()
+	tv1 := sk.W.Mul(mTick)
+	tv2 := sk.Y.Mul(m)
+	e := sk.X.Add(tv1).Add(tv2)
 
-	tv2.Mul(sk.Y, m)
-	tv1.Mul(sk.W, mTick)
-	e.Add(sk.X, tv1)
-	e.Add(e, tv2)
 	// u * (x + w * m' + y * m)
-	sigma := g1.MulScalar(g1.New(), u, e)
+	sigma := u.Mul(e).(*curves.PointBls12381G1)
 
 	if !isValidPointG1(sigma) {
 		return fmt.Errorf("invalid token")
@@ -64,14 +61,13 @@ func (t *Token) Verify(pk *PublicKey, id []byte) error {
 	if err != nil {
 		return err
 	}
-	rhs, err := g2.MultiExp(g2.New(), []*bls12381.PointG2{pk.W, pk.X, pk.Y}, []*bls12381.Fr{mTick, bls12381.NewFr().One(), m})
-	if err != nil {
-		return err
-	}
+	curve := curves.BLS12381G2()
+	rhs := curve.NewIdentityPoint().SumOfProducts([]curves.Point{pk.W, pk.X, pk.Y}, []curves.Scalar{mTick, curve.NewScalar().One(), m}).(*curves.PointBls12381G2)
+	g := curve.NewGeneratorPoint().(*curves.PointBls12381G2)
 
-	engine := bls12381.NewEngine()
-	engine.AddPairInv(u, rhs)
-	engine.AddPair(t.Value, genG2)
+	engine := new(bls12381.Engine)
+	engine.AddPairInvG1(u.Value, rhs.Value)
+	engine.AddPair(t.Value.Value, g.Value)
 	if engine.Check() {
 		return nil
 	} else {
@@ -80,36 +76,25 @@ func (t *Token) Verify(pk *PublicKey, id []byte) error {
 }
 
 func (t *Token) ApplyBlinding(token *Token, b *Blinding) *Token {
-	tmp := g1.New()
-	g1.Sub(tmp, token.Value, b.Value)
-	t.Value = tmp
+	t.Value, _ = token.Value.Sub(b.Value).(*curves.PointBls12381G1)
 	return t
 }
 
 func (t *Token) RemoveBlinding(token *Token, b *Blinding) *Token {
-	t.Value = g1.New()
-	g1.Add(t.Value, token.Value, b.Value)
+	t.Value, _ = token.Value.Add(b.Value).(*curves.PointBls12381G1)
 	return t
 }
 
 func (t Token) MarshalBinary() ([]byte, error) {
-	return g1.ToCompressed(t.Value), nil
+	return t.Value.MarshalBinary()
 }
 
 func (t *Token) UnmarshalBinary(data []byte) error {
-	p, err := g1.FromCompressed(data)
-	if err != nil {
-		return err
-	}
-	if !isValidPointG1(p) {
-		return fmt.Errorf("invalid token")
-	}
-	t.Value = p
-	return nil
+	return t.Value.UnmarshalBinary(data)
 }
 
 func (t Token) MarshalText() ([]byte, error) {
-	return json.Marshal(g1.ToCompressed(t.Value))
+	return json.Marshal(t.Value.ToAffineCompressed())
 }
 
 func (t *Token) UnmarshalText(in []byte) error {

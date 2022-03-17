@@ -19,6 +19,6 @@ func TestBlindingWorks(t *testing.T) {
 	token, err := sk.Sign(testId)
 	require.NoError(t, err)
 	blindedToken := new(Token).ApplyBlinding(token, blinding)
-	require.False(t, g1.Equal(token.Value, blindedToken.Value))
-	require.True(t, g1.Equal(new(Token).RemoveBlinding(blindedToken, blinding).Value, token.Value))
+	require.False(t, token.Value.Equal(blindedToken.Value))
+	require.True(t, new(Token).RemoveBlinding(blindedToken, blinding).Value.Equal(token.Value))
 }
