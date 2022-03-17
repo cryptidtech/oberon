@@ -86,11 +86,16 @@ func (t *Token) RemoveBlinding(token *Token, b *Blinding) *Token {
 }
 
 func (t Token) MarshalBinary() ([]byte, error) {
-	return t.Value.MarshalBinary()
+	return t.Value.ToAffineCompressed(), nil
 }
 
 func (t *Token) UnmarshalBinary(data []byte) error {
-	return t.Value.UnmarshalBinary(data)
+	tt, err := t.Value.FromAffineCompressed(data)
+	if err != nil {
+		return err
+	}
+	t.Value = tt.(*curves.PointBls12381G1)
+	return nil
 }
 
 func (t Token) MarshalText() ([]byte, error) {
