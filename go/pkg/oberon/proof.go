@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/coinbase/kryptology/pkg/core/curves"
+	"github.com/coinbase/kryptology/pkg/core/curves/native"
 	"github.com/coinbase/kryptology/pkg/core/curves/native/bls12381"
 	"io"
 )
@@ -159,8 +160,10 @@ func (p Proof) MarshalBinary() ([]byte, error) {
 	copy(tmp[:48], p.Proof.ToAffineCompressed())
 	copy(tmp[48:96], p.UTick.ToAffineCompressed())
 	copy(tmp[96:192], p.Commitment.ToAffineCompressed())
-	copy(tmp[192:224], p.Challenge.Bytes())
-	copy(tmp[224:], p.Schnorr.Bytes())
+	t := p.Challenge.Value.Bytes()
+	copy(tmp[192:224], t[:])
+	t = p.Schnorr.Value.Bytes()
+	copy(tmp[224:], t[:])
 	return tmp[:], nil
 }
 
@@ -181,11 +184,16 @@ func (p *Proof) UnmarshalBinary(in []byte) error {
 	if err != nil {
 		return err
 	}
-	challenge, err := curve.NewScalar().SetBytes(in[192:224])
+	var t [native.FieldBytes]byte
+	copy(t[:], in[192:224])
+	challenge, _ := curve.NewScalar().(*curves.ScalarBls12381)
+	_, err = challenge.Value.SetBytes(&t)
 	if err != nil {
 		return err
 	}
-	schnorr, err := curve.NewScalar().SetBytes(in[224:])
+	copy(t[:], in[224:])
+	schnorr, _ := curve.NewScalar().(*curves.ScalarBls12381)
+	_, err = schnorr.Value.SetBytes(&t)
 	if err != nil {
 		return err
 	}
@@ -202,20 +210,22 @@ func (p *Proof) UnmarshalBinary(in []byte) error {
 		p.Proof = Proof
 		p.UTick = UTick
 		p.Commitment = Commitment
-		p.Challenge, _ = challenge.(*curves.ScalarBls12381)
-		p.Schnorr, _ = schnorr.(*curves.ScalarBls12381)
+		p.Challenge = challenge
+		p.Schnorr = schnorr
 		return nil
 	}
 	return fmt.Errorf("invalid proof")
 }
 
 func (p Proof) MarshalText() ([]byte, error) {
+	c := p.Challenge.Value.Bytes()
+	s := p.Schnorr.Value.Bytes()
 	tmp := map[string][]byte{
 		"proof":      p.Proof.ToAffineCompressed(),
 		"u_tick":     p.UTick.ToAffineCompressed(),
 		"commitment": p.Commitment.ToAffineCompressed(),
-		"challenge":  p.Challenge.Bytes(),
-		"schnorr":    p.Schnorr.Bytes(),
+		"challenge":  c[:],
+		"schnorr":    s[:],
 	}
 	return json.Marshal(&tmp)
 }
@@ -260,18 +270,28 @@ func (p *Proof) UnmarshalText(in []byte) error {
 		return fmt.Errorf("missing expected mak key 'commitment'")
 	}
 	if challengeBytes, ok := tmp["challenge"]; ok {
-		chal, err := curve.NewScalar().SetBytes(challengeBytes)
+		if len(challengeBytes) != native.FieldBytes {
+			return fmt.Errorf("invalid byte sequence for 'challenge'")
+		}
+		var t [native.FieldBytes]byte
+		copy(t[:], challengeBytes)
+		challenge, _ = curve.NewScalar().(*curves.ScalarBls12381)
+		_, err = challenge.Value.SetBytes(&t)
 		if err != nil {
 			return err
 		}
-		challenge, _ = chal.(*curves.ScalarBls12381)
 	}
 	if schnorrBytes, ok := tmp["schnorr"]; ok {
-		sch, err := curve.NewScalar().SetBytes(schnorrBytes)
+		if len(schnorrBytes) != native.FieldBytes {
+			return fmt.Errorf("invalid byte sequence for 'schnorr'")
+		}
+		var t [native.FieldBytes]byte
+		copy(t[:], schnorrBytes)
+		schnorr, _ = curve.NewScalar().(*curves.ScalarBls12381)
+		_, err = schnorr.Value.SetBytes(&t)
 		if err != nil {
 			return err
 		}
-		schnorr, _ = sch.(*curves.ScalarBls12381)
 	}
 
 	goodProof := isValidPointG1(proof)

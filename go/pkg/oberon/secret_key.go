@@ -87,10 +87,11 @@ func (s *SecretKey) Sign(id []byte) (*Token, error) {
 }
 
 func (s SecretKey) MarshalBinary() ([]byte, error) {
+	w, x, y := s.W.Value.Bytes(), s.X.Value.Bytes(), s.Y.Value.Bytes()
 	var tmp [96]byte
-	copy(tmp[:32], s.W.Bytes())
-	copy(tmp[32:64], s.X.Bytes())
-	copy(tmp[64:96], s.Y.Bytes())
+	copy(tmp[:32], w[:])
+	copy(tmp[32:64], x[:])
+	copy(tmp[64:96], y[:])
 	return tmp[:], nil
 }
 
@@ -128,10 +129,11 @@ func (s *SecretKey) UnmarshalBinary(in []byte) error {
 }
 
 func (s SecretKey) MarshalText() ([]byte, error) {
+	w, x, y := s.W.Value.Bytes(), s.X.Value.Bytes(), s.Y.Value.Bytes()
 	tmp := map[string][]byte{
-		"w": s.W.Bytes(),
-		"x": s.X.Bytes(),
-		"y": s.Y.Bytes(),
+		"w": w[:],
+		"x": x[:],
+		"y": y[:],
 	}
 	return json.Marshal(&tmp)
 }
