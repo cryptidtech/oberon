@@ -6,7 +6,7 @@ Oberon is a multi-factor zero-knowledge capable token
 without requiring email, SMS, or authenticator apps.
 The proof of token validity is only 96 bytes while the token itself is only 48 bytes.
 """
-edition = "2018"
+edition = "2021"
 keywords = ["zero-knowledge", "cryptography", "authentication"]
 categories = ["no-std", "wasm", "network-programming", "cryptography", "authentication"]
 homepage = "https://github.com/mikelodder7/oberon"
