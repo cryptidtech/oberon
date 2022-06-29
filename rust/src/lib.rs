@@ -155,6 +155,8 @@ mod token;
 mod util;
 #[cfg(feature = "wasm")]
 mod web;
+#[cfg(feature = "php")]
+mod php;
 
 pub use blinding::*;
 pub use proof::*;
@@ -164,3 +166,6 @@ pub use token::*;
 #[cfg_attr(docsrs, doc(cfg(feature = "wasm")))]
 #[cfg(feature = "wasm")]
 pub use web::*;
+#[cfg_attr(docsrs, doc(cfg(feature = "php")))]
+#[cfg(feature = "php")]
+pub use php::*;

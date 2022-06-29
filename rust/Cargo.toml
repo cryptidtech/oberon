@@ -26,10 +26,12 @@ default = []
 alloc = ["bls12_381_plus/alloc", "digest/alloc"]
 std = ["digest/std", "sha3/std"]
 wasm = ["getrandom", "rand", "wasm-bindgen"]
+php = ["ext-php-rs", "std"]
 
 [dependencies]
 bls12_381_plus = "0.5"
 digest = { version = "0.9", default-features = false }
+ext-php-rs = { version = "0.7", optional = true }
 ff = "0.10"
 getrandom = { version = "0.2", features = ["js"], optional = true }
 group = "0.10"
