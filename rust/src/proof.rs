@@ -255,7 +255,8 @@ fn get_points_and_scalars(
         points.push(b.0);
         scalars.push(r);
     }
-    (points, scalars, points.len())
+    let l = points.len();
+    (points, scalars, l)
 }
 
 #[test]

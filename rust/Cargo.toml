@@ -25,8 +25,8 @@ lto = true
 default = []
 alloc = ["bls12_381_plus/alloc", "digest/alloc"]
 std = ["digest/std", "sha3/std"]
-wasm = ["getrandom", "rand", "wasm-bindgen"]
-php = ["ext-php-rs", "std"]
+wasm = ["getrandom", "rand/default", "wasm-bindgen"]
+php = ["ext-php-rs", "rand/default", "std"]
 
 [dependencies]
 bls12_381_plus = "0.5"

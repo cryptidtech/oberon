@@ -148,6 +148,8 @@ macro_rules! wasm_slice_impl {
 }
 
 mod blinding;
+#[cfg(feature = "php")]
+mod php;
 mod proof;
 mod public_key;
 mod secret_key;
@@ -155,10 +157,11 @@ mod token;
 mod util;
 #[cfg(feature = "wasm")]
 mod web;
-#[cfg(feature = "php")]
-mod php;
 
 pub use blinding::*;
+#[cfg_attr(docsrs, doc(cfg(feature = "php")))]
+#[cfg(feature = "php")]
+pub use php::*;
 pub use proof::*;
 pub use public_key::*;
 pub use secret_key::*;
@@ -166,6 +169,3 @@ pub use token::*;
 #[cfg_attr(docsrs, doc(cfg(feature = "wasm")))]
 #[cfg(feature = "wasm")]
 pub use web::*;
-#[cfg_attr(docsrs, doc(cfg(feature = "php")))]
-#[cfg(feature = "php")]
-pub use php::*;
