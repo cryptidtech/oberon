@@ -15,6 +15,40 @@ steal and only would see a public key. The proof of token validity is only 256
 bytes while the token itself is only 48 bytes. The issuing party and verifying
 servers can be separate entities.
 
+## Languages
+
+Oberon is implemented for Rust, Go, WebAssembly, PHP8, and C/C++ via FFI.
+
+### Building
+
+#### Rust
+```bash
+cargo build --release
+```
+
+The binary is created in `target/release/liboberon.so`
+
+#### WebAssembly
+```bash
+wasm-pack build --target=web -- --features=wasm
+```
+
+#### PHP8
+You must have PHP8 installed to complete the build. The `Dockerfile` in this repo
+already sets up the necessary environment.
+
+```bash
+docker build -t oberon-php -f Dockerfile.php .
+docker run --rm -v $PWD:/data -w /data -t oberon-php cargo build --release --features=php
+```
+
+#### C/C++
+
+To expose the non-mangled functions that are compatible with C/C++ use
+```bash
+cargo build --release --features=ffi
+```
+
 ## In depth details
 
 The cryptography can be found [here](CRYPTO.md)
