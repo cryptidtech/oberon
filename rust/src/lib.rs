@@ -148,6 +148,8 @@ macro_rules! wasm_slice_impl {
 }
 
 mod blinding;
+#[cfg(feature = "ffi")]
+mod ffi;
 #[cfg(feature = "php")]
 mod php;
 mod proof;
@@ -159,6 +161,9 @@ mod util;
 mod web;
 
 pub use blinding::*;
+#[cfg_attr(docsrs, doc(cfg(feature = "ffi")))]
+#[cfg(feature = "ffi")]
+pub use ffi::*;
 #[cfg_attr(docsrs, doc(cfg(feature = "php")))]
 #[cfg(feature = "php")]
 pub use php::*;

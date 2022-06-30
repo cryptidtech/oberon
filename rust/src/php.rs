@@ -173,7 +173,6 @@ macro_rules! from_bytes {
         }
     };
 }
-
 from_bytes!(secret_key, SecretKey);
 from_bytes!(public_key, PublicKey);
 from_bytes!(get_token, Token);

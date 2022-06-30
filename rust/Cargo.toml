@@ -24,17 +24,20 @@ lto = true
 [features]
 default = []
 alloc = ["bls12_381_plus/alloc", "digest/alloc"]
+ffi = ["ffi-support", "lazy_static", "rand/default", "std"]
+php = ["ext-php-rs", "rand/default", "std"]
 std = ["digest/std", "sha3/std"]
 wasm = ["getrandom", "rand/default", "wasm-bindgen"]
-php = ["ext-php-rs", "rand/default", "std"]
 
 [dependencies]
 bls12_381_plus = "0.5"
 digest = { version = "0.9", default-features = false }
 ext-php-rs = { version = "0.7", optional = true }
 ff = "0.10"
+ffi-support = { version = "0.4", optional = true }
 getrandom = { version = "0.2", features = ["js"], optional = true }
 group = "0.10"
+lazy_static = { version = "1.4", optional = true }
 rand_core = "0.6"
 rand = { version = "0.8", default-features = false, optional = true }
 serde = { version = "1.0", features = ["derive"] }
