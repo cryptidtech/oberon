@@ -154,6 +154,8 @@ mod ffi;
 mod php;
 mod proof;
 mod public_key;
+#[cfg(feature = "python")]
+mod python;
 mod secret_key;
 mod token;
 mod util;
@@ -169,6 +171,9 @@ pub use ffi::*;
 pub use php::*;
 pub use proof::*;
 pub use public_key::*;
+#[cfg_attr(docsrs, doc(cfg(feature = "python")))]
+#[cfg(feature = "python")]
+pub use python::*;
 pub use secret_key::*;
 pub use token::*;
 #[cfg_attr(docsrs, doc(cfg(feature = "wasm")))]

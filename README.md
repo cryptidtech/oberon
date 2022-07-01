@@ -17,7 +17,7 @@ servers can be separate entities.
 
 ## Languages
 
-Oberon is implemented for Rust, Go, WebAssembly, PHP8, and C/C++ via FFI.
+Oberon is implemented for Rust, Go, WebAssembly, PHP8, Python, and C/C++ via FFI.
 
 ### Building
 
@@ -40,6 +40,14 @@ already sets up the necessary environment.
 ```bash
 docker build -t oberon-php -f Dockerfile.php .
 docker run --rm -v $PWD:/data -w /data -t oberon-php cargo build --release --features=php
+```
+
+#### Python
+
+Building python requires Python 3.7 and up and [maturin](https://github.com/PyO3/maturin)
+
+```bash
+maturin develop --cargo-extra-args="--features=python"
 ```
 
 #### C/C++

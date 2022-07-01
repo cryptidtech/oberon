@@ -19,13 +19,16 @@ version = "1.1.1"
 crate-type = ["rlib", "cdylib"]
 
 [profile.release]
+debug = false
 lto = true
+opt-level = 3
 
 [features]
 default = []
 alloc = ["bls12_381_plus/alloc", "digest/alloc"]
 ffi = ["ffi-support", "lazy_static", "rand/default", "std"]
 php = ["ext-php-rs", "rand/default", "std"]
+python = ["pyo3", "rand/default", "std"]
 std = ["digest/std", "sha3/std"]
 wasm = ["getrandom", "rand/default", "wasm-bindgen"]
 
@@ -38,6 +41,7 @@ ffi-support = { version = "0.4", optional = true }
 getrandom = { version = "0.2", features = ["js"], optional = true }
 group = "0.10"
 lazy_static = { version = "1.4", optional = true }
+pyo3 = { version = "0.16", features = ["extension-module"], optional = true }
 rand_core = "0.6"
 rand = { version = "0.8", default-features = false, optional = true }
 serde = { version = "1.0", features = ["derive"] }
