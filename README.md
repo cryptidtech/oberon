@@ -59,7 +59,7 @@ cargo build --release --features=ffi
 
 ## In depth details
 
-The cryptography can be found [here](CRYPTO.md)
+The cryptography can be found [here](MATH.md)
 
 First steps require generating keys
 
