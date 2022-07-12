@@ -1,0 +1,14 @@
+{
+  "name": "oberon",
+  "version": "1.1.1",
+  "description": "",
+  "main": "lib/index.js",
+  "author": "Michael Lodder <redmike7@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "neon-cli": "^0.10.1"
+  },
+  "scripts": {
+    "install": "neon build"
+  }
+}
