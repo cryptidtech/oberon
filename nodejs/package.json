@@ -10,7 +10,7 @@
     "install": "npm run build-release",
     "test": "cargo test"
   },
-  "author": "Michael Lodder",
+  "author": "Michael Lodder <redmike7@gmail.com>",
   "license": "Apache-2.0",
   "devDependencies": {
     "cargo-cp-artifact": "^0.1"
@@ -19,10 +19,6 @@
     "type": "git",
     "url": "git+https://github.com/cryptidtech/oberon.git"
   },
-  "keywords": [
-    "ZKP",
-    "token"
-  ],
   "bugs": {
     "url": "https://github.com/cryptidtech/oberon/issues"
   },

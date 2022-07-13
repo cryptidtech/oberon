@@ -3,6 +3,7 @@ use neon::{
     types::buffer::TypedArray,
 };
 use oberon::*;
+use std::convert::TryFrom;
 
 macro_rules! slice_to_js_array_buffer {
     ($slice:expr, $cx:expr) => {{
