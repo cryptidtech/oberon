@@ -1,14 +1,30 @@
 {
-  "name": "oberon",
+  "name": "nodeoberon",
   "version": "1.1.1",
-  "description": "",
-  "main": "lib/index.js",
-  "author": "Michael Lodder <redmike7@gmail.com",
-  "license": "MIT",
-  "dependencies": {
-    "neon-cli": "^0.10.1"
-  },
+  "description": "A succinct ZKP protocol for authentication",
+  "main": "index.node",
   "scripts": {
-    "install": "neon build"
-  }
+    "build": "cargo-cp-artifact -nc index.node -- cargo build --message-format=json-render-diagnostics",
+    "build-debug": "npm run build --",
+    "build-release": "npm run build -- --release",
+    "install": "npm run build-release",
+    "test": "cargo test"
+  },
+  "author": "Michael Lodder",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "cargo-cp-artifact": "^0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cryptidtech/oberon.git"
+  },
+  "keywords": [
+    "ZKP",
+    "token"
+  ],
+  "bugs": {
+    "url": "https://github.com/cryptidtech/oberon/issues"
+  },
+  "homepage": "https://github.com/cryptidtech/oberon#readme"
 }

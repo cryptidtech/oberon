@@ -1,6 +1,7 @@
 [package]
 name = "nodeoberon"
 version = "1.1.1"
+description = "A succint ZKP protocol for authentication"
 authors = ["Michael Lodder <redmike7@gmail.com>"]
 license = "Apache-2"
 build = "build.rs"
@@ -15,6 +16,6 @@ crate-type = ["cdylib"]
 neon-build = "0.10"
 
 [dependencies]
-neon = "0.10"
+neon = { version = "0.10", default-features = false, features = ["napi-5"]  }
 oberon = { version = "1.1.1", path = "../../rust" }
 rand = "0.8"
