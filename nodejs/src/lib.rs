@@ -66,8 +66,8 @@ fn secret_key_from_seed(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
 /// @returns ArrayBuffer `token` - The token
 fn new_token(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
     let ja = JsArrayBuffer::new(&mut cx, 0)?;
-    let id_buffer: Handle<JsArrayBuffer> = cx.argument(0)?;
-    let sk_buffer: Handle<JsArrayBuffer> = cx.argument(1)?;
+    let id_buffer: Handle<JsArrayBuffer> = cx.argument(1)?;
+    let sk_buffer: Handle<JsArrayBuffer> = cx.argument(0)?;
 
     let id_bytes = id_buffer.as_slice(&cx);
     let sk_bytes = sk_buffer.as_slice(&cx);
@@ -78,7 +78,10 @@ fn new_token(mut cx: FunctionContext) -> JsResult<JsArrayBuffer> {
 
     let sk = SecretKey::from_bytes(&<[u8; SecretKey::BYTES]>::try_from(sk_bytes).unwrap()).unwrap();
     match Token::new(&sk, id_bytes) {
-        None => cx.throw(ja),
+        None => {
+            let out = slice_to_js_array_buffer!(String::from("failed to create the token").as_bytes(), cx);
+            cx.throw(out)
+        },
         Some(token) => Ok(slice_to_js_array_buffer!(&token.to_bytes(), cx)),
     }
 }
