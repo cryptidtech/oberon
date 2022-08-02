@@ -4,24 +4,35 @@ from .bindings import secret_key_size, public_key_size, token_size, \
     verify_token, add_blinding, remove_blinding, \
     create_proof, verify_proof
 
+from typing import Optional, Union
+
+
+def from_seed(seed):
+    return SecretKey(secret_key_from_seed(seed))
+
 
 class SecretKey:
     """A secret signing key"""
 
-    def __init__(self, value: bytes):
-        if len(value) == secret_key_size():
-            self.value = value
+    def __init__(self, value: Optional[Union[str, bytes, list]] = None):
+        data = bytes()
+        if isinstance(value, memoryview):
+            data = value
+        if isinstance(value, bytearray):
+            data = value
+        if value is not None:
+            if isinstance(value, str):
+                data = value.encode("utf-8")
+        if len(data) == secret_key_size():
+            self.value = data
         else:
             self.value = new_secret_key()
 
-    def from_seed(self, seed):
-        self.value = secret_key_from_seed(seed)
-
     def public_key(self):
-        PublicKey(get_public_key(self.value))
+        return PublicKey(get_public_key(self.value))
 
     def new_token(self, identifier: bytes):
-        Token(new_token(self.value, identifier))
+        return Token(new_token(self.value, identifier))
 
     def __bytes__(self):
         return self.value
