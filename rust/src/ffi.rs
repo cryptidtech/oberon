@@ -352,7 +352,7 @@ pub extern "C" fn oberon_create_proof_set_nonce(
     err: &mut ExternError,
 ) -> i32 {
     CREATE_PROOF_CONTEXT.call_with_output_mut(err, handle, move |ctx| {
-        ctx.id = Some(nonce.to_vec());
+        ctx.nonce = Some(nonce.to_vec());
     });
     err.get_code().code()
 }
