@@ -17,7 +17,7 @@ from ctypes import (
 )
 
 from ctypes.util import find_library
-from typing import Optional, Sequence, Union
+from typing import Optional, Union
 
 LIB: CDLL = None
 
@@ -46,7 +46,7 @@ def _decode_bytes(arg: Optional[Union[str, bytes, FfiByteBuffer]]) -> bytes:
         return arg
     if arg is not None:
         if isinstance(arg, str):
-            return arg.encode("utf-8") 
+            return arg.encode("utf-8")
     return bytearray()
 
 
@@ -91,6 +91,22 @@ def _load_library(lib_name: str) -> CDLL:
 
     lib_path = find_library(lib_name)
     if not lib_path:
+        if sys.platform == "darwin":
+            ld = os.getenv("DYLD_LIBRARY_PATH")
+            lib_path = os.path.join(ld, "liboberon.dylib")
+            if os.path.exists(lib_path):
+                return CDLL(lib_path)
+
+            ld = os.getenv("DYLD_FALLBACK_LIBRARY_PATH")
+            lib_path = os.path.join(ld, "liboberon.dylib")
+            if os.path.exists(lib_path):
+                return CDLL(lib_path)
+        elif sys.platform != "win32":
+            ld = os.getenv("LD_LIBRARY_PATH")
+            lib_path = os.path.join(ld, "liboberon.so")
+            if os.path.exists(lib_path):
+                return CDLL(lib_path)
+
         raise Exception(f"Error loading library: {lib_name}")
     try:
         return CDLL(lib_path)
