@@ -4,7 +4,7 @@ import runpy
 from setuptools import find_packages, setup
 
 PACKAGE_NAME = "oberon"
-version_meta = runpy.run_path("/{}/version.py".format(PACKAGE_NAME))
+version_meta = runpy.run_path("./{}/version.py".format(PACKAGE_NAME))
 VERSION = version_meta["__version__"]
 
 if __name__ == "__main__":
@@ -26,6 +26,5 @@ if __name__ == "__main__":
         classifiers=[
             "Programming Language :: Python :: 3",
             "License :: OSI Approved :: Apache Software License",
-            "Operating System :: OS Indepedent",
         ],
     )
