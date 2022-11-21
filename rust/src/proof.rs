@@ -65,11 +65,11 @@ impl Proof {
 
         let id = id.as_ref();
         let m = hash_to_scalar(&[id]);
-        if m.is_zero() {
+        if m.is_zero().unwrap_u8() == 1 {
             return None;
         }
         let m_tick = hash_to_scalar(&[&m.to_bytes()[..]]);
-        if m_tick.is_zero() {
+        if m_tick.is_zero().unwrap_u8() == 1 {
             return None;
         }
         let u = hash_to_curve(&m_tick.to_bytes()[..]);
@@ -111,19 +111,19 @@ impl Proof {
         if self.u_tick.is_identity().unwrap_u8() == 1
             || self.proof.is_identity().unwrap_u8() == 1
             || self.commitment.is_identity().unwrap_u8() == 1
-            || self.challenge.is_zero()
-            || self.schnorr.is_zero()
+            || self.challenge.is_zero().unwrap_u8() == 1
+            || self.schnorr.is_zero().unwrap_u8() == 1
         {
             return Choice::from(0u8);
         }
 
         let id = id.as_ref();
         let m = hash_to_scalar(&[id]);
-        if m.is_zero() {
+        if m.is_zero().unwrap_u8() == 1 {
             return Choice::from(0u8);
         }
         let m_tick = hash_to_scalar(&[&m.to_bytes()[..]]);
-        if m_tick.is_zero() {
+        if m_tick.is_zero().unwrap_u8() == 1u8 {
             return Choice::from(0u8);
         }
         let s = self.schnorr;
@@ -190,7 +190,7 @@ impl Proof {
                 commit.and_then(|commitment| {
                     chal.and_then(|challenge| {
                         schn.and_then(|schnorr| {
-                            let is_some: u8 = (!challenge.is_zero() && !schnorr.is_zero()).into();
+                            let is_some: u8 = ((challenge.is_zero() | schnorr.is_zero()).unwrap_u8() == 0).into();
                             CtOption::new(
                                 Self {
                                     proof,
@@ -211,7 +211,7 @@ impl Proof {
 
 fn gen_rnd_scalar(mut rng: impl RngCore + CryptoRng) -> Scalar {
     let mut s = Scalar::random(&mut rng);
-    while s.is_zero() || s == Scalar::one() {
+    while s.is_zero().unwrap_u8() == 1 || s == Scalar::one() {
         s = Scalar::random(&mut rng);
     }
     s

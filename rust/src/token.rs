@@ -133,11 +133,11 @@ impl Token {
     pub fn new<B: AsRef<[u8]>>(sk: &SecretKey, id: B) -> Option<Self> {
         let id = id.as_ref();
         let m = hash_to_scalar(&[id]);
-        if m.is_zero() {
+        if m.is_zero().unwrap_u8() == 1 {
             return None;
         }
         let m_tick = hash_to_scalar(&[&m.to_bytes()[..]]);
-        if m_tick.is_zero() {
+        if m_tick.is_zero().unwrap_u8() == 1 {
             return None;
         }
         let u = hash_to_curve(&m_tick.to_bytes()[..]);
@@ -156,11 +156,11 @@ impl Token {
     pub fn verify<B: AsRef<[u8]>>(&self, pk: PublicKey, id: B) -> Choice {
         let id = id.as_ref();
         let m = hash_to_scalar(&[id]);
-        if m.is_zero() {
+        if m.is_zero().unwrap_u8() == 1 {
             return Choice::from(0u8);
         }
         let m_tick = hash_to_scalar(&[&m.to_bytes()[..]]);
-        if m_tick.is_zero() {
+        if m_tick.is_zero().unwrap_u8() == 1 {
             return Choice::from(0u8);
         }
         let u = hash_to_curve(&m_tick.to_bytes()[..]);
