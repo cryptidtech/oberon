@@ -61,7 +61,6 @@ fn signing(c: &mut Criterion) {
     });
 }
 
-
 fn token_verify(c: &mut Criterion) {
     let mut id = [0u8; 16];
     let mut sk_seed = [0u8; 16];
@@ -118,5 +117,33 @@ fn proof_verify(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, signing, token_verify, proof_verify, xof_shift_rng, chacha_rng, os_rng);
+fn blinding_factor(c: &mut Criterion) {
+    c.bench_function("Blinding factor length 1", |b| {
+        b.iter(|| {
+            Blinding::new(&[1u8])
+        })
+    });
+    c.bench_function("Blinding factor length 2", |b| {
+        b.iter(|| {
+            Blinding::new(&[2u8; 2])
+        })
+    });
+    c.bench_function("Blinding factor length 4", |b| {
+        b.iter(|| {
+            Blinding::new(&[4u8; 4])
+        })
+    });
+    c.bench_function("Blinding factor length 8", |b| {
+        b.iter(|| {
+            Blinding::new(&[8u8; 8])
+        })
+    });
+    c.bench_function("Blinding factor length 16", |b| {
+        b.iter(|| {
+            Blinding::new(&[16u8; 16])
+        })
+    });
+}
+
+criterion_group!(benches, signing, token_verify, proof_verify, xof_shift_rng, chacha_rng, os_rng, blinding_factor);
 criterion_main!(benches);

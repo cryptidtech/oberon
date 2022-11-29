@@ -4,6 +4,7 @@ use rand::rngs::OsRng;
 use rand_core::{RngCore, SeedableRng, CryptoRng};
 use rand_chacha::ChaChaRng;
 use rand_xorshift::XorShiftRng;
+use random_tester::*;
 
 struct XorShiftRngWrapper(XorShiftRng);
 
@@ -36,7 +37,7 @@ impl RngCore for XorShiftRngWrapper {
 impl CryptoRng for XorShiftRngWrapper {}
 
 fn main() {
-    const SAMPLE_COUNT: usize = 2000;
+    const SAMPLE_COUNT: usize = 4000;
     const SAMPLE_DIMENSIONS: usize = 256;
     const K: usize = 2;
     const MAX_ITER: usize = 1000;
@@ -52,6 +53,13 @@ fn main() {
     let sk = SecretKey::hash(&sk_seed);
     let token = sk.sign(id).unwrap();
 
+    let mut entropy_testers: Vec<(&'static str, &'static str, Box<dyn DynEntropyTester>)> = vec![
+        ("Shannon", ">= 7.9", Box::new(ShannonCalculation::default())),
+        ("Mean", "= 127.0", Box::new(MeanCalculation::default())),
+        ("MonteCarlo", "3.1 <=> 3.2", Box::new(MonteCarloCalculation::default())),
+        ("Serial", "-0.004 <=> 0.004", Box::new(SerialCorrelationCoefficientCalculation::default())),
+        ("ChiSquare", "0.001 <=> 0.99", Box::new(ChiSquareCalculation::default()))
+    ];
 
     // Create proof samples using the same nonce
     // Not done in practice but used to isolate the effects
@@ -63,16 +71,24 @@ fn main() {
         for i in 0..SAMPLE_COUNT {
             let proof = Proof::new(&token, &[], &id, &nonce, &mut *rng).unwrap();
             let proof_bytes = proof.to_bytes().iter().map(|b| *b as f32).collect::<Vec<f32>>();
+            for tester in entropy_testers.iter_mut() {
+                tester.2.update(&proof.to_bytes());
+            }
             samples[i * SAMPLE_DIMENSIONS..(i + 1)*SAMPLE_DIMENSIONS].copy_from_slice(&proof_bytes);
         }
         println!("Computing clustering");
         let kmean = KMeans::new(samples, SAMPLE_COUNT, SAMPLE_DIMENSIONS);
         let result = kmean.kmeans_lloyd(K, MAX_ITER, KMeans::init_kmeanplusplus, &KMeansConfig::default());
 
-        println!("Centroids: {:?}", result.centroids);
-        println!("Cluster-assignments: {:?}", result.assignments);
+        // println!("Centroids: {:?}", result.centroids);
+        // println!("Cluster-assignments: {:?}", result.assignments);
         println!("Error: {}", result.distsum);
+        for tester in entropy_testers.iter_mut() {
+            println!("{}: {} - {}", tester.0, tester.1, tester.2.finalize());
+        }
     }
+
+
 }
 
 enum Rngs {
