@@ -20,9 +20,9 @@ pub struct PublicKey {
 impl Default for PublicKey {
     fn default() -> Self {
         Self {
-            w: G2Projective::identity(),
-            x: G2Projective::identity(),
-            y: G2Projective::identity(),
+            w: G2Projective::IDENTITY,
+            x: G2Projective::IDENTITY,
+            y: G2Projective::IDENTITY,
         }
     }
 }
@@ -30,9 +30,9 @@ impl Default for PublicKey {
 impl From<&SecretKey> for PublicKey {
     fn from(sk: &SecretKey) -> Self {
         Self {
-            w: G2Projective::generator() * sk.w,
-            x: G2Projective::generator() * sk.x,
-            y: G2Projective::generator() * sk.y,
+            w: G2Projective::GENERATOR * sk.w,
+            x: G2Projective::GENERATOR * sk.x,
+            y: G2Projective::GENERATOR * sk.y,
         }
     }
 }

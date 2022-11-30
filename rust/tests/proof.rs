@@ -86,6 +86,11 @@ fn serialization_test() {
         131, 218, 214, 15, 128, 127, 35, 235, 189, 41, 199, 117, 169, 32, 249, 176, 0, 107,
     ]);
     assert_eq!(ct_proof.is_some().unwrap_u8(), 1u8);
+    let proof = ct_proof.unwrap();
+    let s = serde_json::to_string(&proof).unwrap();
+    println!("len = {}", s.len());
+    println!("json = {:#?}", s);
+    println!("cbor = {}", hex::encode(&serde_bare::to_vec(&proof).unwrap()));
 }
 
 #[test]

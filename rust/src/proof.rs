@@ -32,11 +32,11 @@ pub struct Proof {
 impl Default for Proof {
     fn default() -> Self {
         Self {
-            proof: G1Projective::identity(),
-            u_tick: G1Projective::identity(),
-            commitment: G2Projective::identity(),
-            challenge: Scalar::zero(),
-            schnorr: Scalar::zero(),
+            proof: G1Projective::IDENTITY,
+            u_tick: G1Projective::IDENTITY,
+            commitment: G2Projective::IDENTITY,
+            challenge: Scalar::ZERO,
+            schnorr: Scalar::ZERO,
         }
     }
 }
@@ -81,8 +81,8 @@ impl Proof {
         let tt = gen_rnd_scalar(&mut rng);
         let r = gen_rnd_scalar(&mut rng);
 
-        let commitment = G2Projective::generator() * t;
-        let proving = G2Projective::generator() * tt;
+        let commitment = G2Projective::GENERATOR * t;
+        let proving = G2Projective::GENERATOR * tt;
         let u_tick = u * r;
         let (points, mut scalars, len) =
             get_points_and_scalars(&[u_tick, token.0], blindings, t, r);
@@ -130,7 +130,7 @@ impl Proof {
         let c = self.challenge;
 
         let proving = G2Projective::sum_of_products_in_place(
-            &[G2Projective::generator(), self.commitment],
+            &[G2Projective::GENERATOR, self.commitment],
             &mut [s, c],
         );
 
@@ -149,7 +149,7 @@ impl Proof {
 
         let rhs = G2Projective::sum_of_products_in_place(
             &[pk.w, pk.x, pk.y, self.commitment],
-            &mut [m_tick, Scalar::one(), m, Scalar::one()],
+            &mut [m_tick, Scalar::ONE, m, Scalar::ONE],
         );
 
         multi_miller_loop(&[
@@ -211,7 +211,7 @@ impl Proof {
 
 fn gen_rnd_scalar(mut rng: impl RngCore + CryptoRng) -> Scalar {
     let mut s = Scalar::random(&mut rng);
-    while s.is_zero().unwrap_u8() == 1 || s == Scalar::one() {
+    while s.is_zero().unwrap_u8() == 1 || s == Scalar::ONE {
         s = Scalar::random(&mut rng);
     }
     s
@@ -228,8 +228,8 @@ fn get_points_and_scalars(
     let mut points = [
         initial[0],
         initial[1],
-        G1Projective::identity(),
-        G1Projective::identity(),
+        G1Projective::IDENTITY,
+        G1Projective::IDENTITY,
     ];
     for i in 0..blindings.len() {
         points[i + 2] = blindings[i].0

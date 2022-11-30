@@ -25,7 +25,7 @@ pub struct Blinding(pub(crate) G1Projective);
 
 impl Default for Blinding {
     fn default() -> Self {
-        Self(G1Projective::identity())
+        Self(G1Projective::IDENTITY)
     }
 }
 

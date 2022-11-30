@@ -39,9 +39,9 @@ pub struct SecretKey {
 impl Default for SecretKey {
     fn default() -> Self {
         Self {
-            w: Scalar::zero(),
-            x: Scalar::zero(),
-            y: Scalar::zero(),
+            w: Scalar::ZERO,
+            x: Scalar::ZERO,
+            y: Scalar::ZERO,
         }
     }
 }
@@ -82,7 +82,7 @@ impl SecretKey {
 
     /// Generate a new key from a seed using SHAKE-256
     pub fn hash(data: &[u8]) -> Self {
-        let mut values = [Scalar::zero(); 3];
+        let mut values = [Scalar::ZERO; 3];
         hash_to_scalars(&[data], &mut values);
         Self {
             w: values[0],

@@ -34,7 +34,7 @@ impl Drop for Token {
 
 impl Default for Token {
     fn default() -> Self {
-        Self(G1Projective::identity())
+        Self(G1Projective::IDENTITY)
     }
 }
 
@@ -170,7 +170,7 @@ impl Token {
 
         let rhs = G2Projective::sum_of_products_in_place(
             &[pk.w, pk.x, pk.y],
-            &mut [m_tick, Scalar::one(), m],
+            &mut [m_tick, Scalar::ONE, m],
         );
 
         multi_miller_loop(&[

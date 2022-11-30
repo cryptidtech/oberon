@@ -31,4 +31,6 @@ fn token_from_bytes() {
     assert_eq!(opt_act_token.is_some().unwrap_u8(), 1u8);
     let act_token = opt_act_token.unwrap();
     assert_eq!(act_token, exp_token);
+
+    println!("{}", hex::encode(&serde_bare::to_vec(&exp_token).unwrap()));
 }
