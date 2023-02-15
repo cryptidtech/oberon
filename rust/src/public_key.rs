@@ -44,6 +44,11 @@ impl PublicKey {
     /// The number of bytes in a public key
     pub const BYTES: usize = 288;
 
+    /// Is this public key valid
+    pub fn is_valid(&self) -> Choice {
+        self.w.is_identity() | self.y.is_identity() | self.x.is_identity()
+    }
+
     /// Convert this public key into a byte sequence
     pub fn to_bytes(&self) -> [u8; Self::BYTES] {
         let mut out = [0u8; Self::BYTES];
