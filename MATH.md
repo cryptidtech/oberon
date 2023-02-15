@@ -156,41 +156,39 @@ This allows the token to be reused while minimizing the risk of correlation.
 
 Below is the algorithm for Prove assuming a blind factor with a pin.
 
-Prove(<img src="https://render.githubusercontent.com/render/math?math=\sigma'">, <img src="https://render.githubusercontent.com/render/math?math=id">, [opt] <img src="https://render.githubusercontent.com/render/math?math=n">)
+Prove(<img src="https://render.githubusercontent.com/render/math?math=\sigma'">, <img src="https://render.githubusercontent.com/render/math?math=id">, <img src="https://render.githubusercontent.com/render/math?math=n">)
 
-- <img src="https://render.githubusercontent.com/render/math?math=m = H_{\mathbb{Z}_q}(id)">
-- if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> abort
-- <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
-- if <img src="https://render.githubusercontent.com/render/math?math=m' = 0">  abort
-- <img src="https://render.githubusercontent.com/render/math?math=U = H_{\mathbb{G}_1}(m')">
-- if <img src="https://render.githubusercontent.com/render/math?math=U = 1_{\mathbb{G}_1}"> abort
-- if <img src="https://render.githubusercontent.com/render/math?math=n \ne \empty"> ; <img src="https://render.githubusercontent.com/render/math?math=d = n"> ; else <img src="https://render.githubusercontent.com/render/math?math=d = ">Unix timestamp in milliseconds
-- <img src="https://render.githubusercontent.com/render/math?math=r, t, tt \xleftarrow{\$} \mathbb{Z}_q*">
-- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{D} = t \cdot \widetilde{P}">
-- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{Dt} = tt \cdot \widetilde{P}">
-- <img src="https://render.githubusercontent.com/render/math?math=U' = r \cdot U">
-- <img src="https://render.githubusercontent.com/render/math?math=\pi = t \cdot U' %2B r \cdot \sigma' %2B r \cdot B">
-- <img src="https://render.githubusercontent.com/render/math?math=c = H_{\mathbb{Z}_q}(id || U' || \pi || \widetilde{D} || \widetilde{Dt} || d)">
-- <img src="https://render.githubusercontent.com/render/math?math=s = tt - c . t">
 
-Output <img src="https://render.githubusercontent.com/render/math?math=\tau = \pi, U', \widetilde{D}, s, d, c, id">
+```math
+\begin{align}
+m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m &= 0\ \text{abort} \\
+m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' &= 0\ \text{abort} \\
+U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U &= 1_{\mathbb{G}_1}\ \text{abort} \\
+r &\xleftarrow{\$} \mathbb{Z}_q* ;& \text{if}\ r &= 0\ \text{abort} \\
+U' &= r \cdot U ;& \text{if}\ U' &= 1_{\mathbb{G}_1}\ \text{abort} \\
+t &= H_{\mathbb{Z}_q}(U' || n) ;& \text{if}\ t &= 0\ \text{abort} \\
+Z &= -(r + t) \cdot (\sigma' + B) ;& \text{if}\ Z &= 1_{\mathbb{G}_1}\ \text{abort} \\
+\tau &= U', Z
+\end{align}
+```
 
 ### Open
 
 Open validates whether a proof is valid against a specific public key and is fresh enough.
 
-Open(<img src="https://render.githubusercontent.com/render/math?math=pk">, <img src="https://render.githubusercontent.com/render/math?math=\tau">)
+Open(<img src="https://render.githubusercontent.com/render/math?math=pk">, <img src="https://render.githubusercontent.com/render/math?math=\tau">, <img src="https://render.githubusercontent.com/render/math?math=n">)
 
-- if <img src="https://render.githubusercontent.com/render/math?math=U' = 1_{\mathbb{G}_1}"> or <img src="https://render.githubusercontent.com/render/math?math=\pi = 1_{\mathbb{G}_1}"> return false
-- if <img src="https://render.githubusercontent.com/render/math?math=d">is timestamp then <img src="https://render.githubusercontent.com/render/math?math=Now - d < th"> return false
-- <img src="https://render.githubusercontent.com/render/math?math=m = H_{\mathbb{Z}_q}(id)"> 
-- if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> abort
-- <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
-- if <img src="https://render.githubusercontent.com/render/math?math=m' = 0"> abort
-- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{Dt} = s \cdot \widetilde{P} %2B c \cdot \widetilde{D}">
-- <img src="https://render.githubusercontent.com/render/math?math=\widetilde{c} = H_{\mathbb{Z}_q}(id || U' || \pi || \widetilde{D} || \widetilde{Dt} || d)">
-- if <img src="https://render.githubusercontent.com/render/math?math=\widetilde{c} \ne c"> return False
-- return <img src="https://render.githubusercontent.com/render/math?math=e(U', \widetilde{X} %2B m \cdot \widetilde{Y} %2B m' \cdot \widetilde{W} %2B \widetilde{D}). e(\pi, -\widetilde{P}) = 1_{\mathbb{G}_T}">
+```math
+\begin{align}
+ & & \text{if}\ U' = 1_{\mathbb{G}_1}\ \text{abort} \\
+ & & \text{if}\ Z = 1_{\mathbb{G}_1}\ \text{abort} \\
+m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m = 0\ \text{abort} \\
+m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' = 0\ \text{abort} \\
+U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U = 1_{\mathbb{G}_1}\ \text{abort} \\
+t &= H_{\mathbb{Z}_q}(U' || n) ;& \text{if}\ t = 0\ \text{abort} \\
+e(&U' + t\cdot U, \widetilde{X} + m \cdot \widetilde{Y} + m' \cdot \widetilde{W})e(Z, \widetilde{P}) == 1_{\mathbb{G}_T}
+\end{align}
+```
 
 ## Other notes
 
