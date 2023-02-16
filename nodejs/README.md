@@ -8,7 +8,7 @@
 1. curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 1. . ~/.nvm/nvm.sh
 1. nvm install --lts
-1. npm install -g npm@8.18.0
+1. npm install -g npm@9.5.0
 1. git clone https://github.com/cryptidtech/oberon.git
 1. cd oberon/nodejs
 1. npm install
@@ -22,7 +22,7 @@
 1. curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash
 1. . ~/.nvm/nvm.sh
 1. nvm install --lts
-1. npm install -g npm@8.18.0
+1. npm install -g npm@9.5.0
 1. git clone https://github.com/cryptidtech/oberon.git
 1. cd oberon/nodejs
 1. npm install
