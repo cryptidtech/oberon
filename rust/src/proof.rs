@@ -2,8 +2,10 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
-use crate::{util::*, Blinding, Token, PublicKey};
-use bls12_381_plus::{G1Projective, G1Affine, G2Prepared, G2Affine, multi_miller_loop, G2Projective, Scalar};
+use crate::{util::*, Blinding, PublicKey, Token};
+use bls12_381_plus::{
+    multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
+};
 use ff::Field;
 use group::{Curve, Group};
 use rand_core::{CryptoRng, RngCore};
@@ -43,7 +45,7 @@ impl Proof {
         blindings: &[Blinding],
         id: B,
         nonce: N,
-        mut rng: impl RngCore + CryptoRng
+        mut rng: impl RngCore + CryptoRng,
     ) -> Option<Self> {
         let id = id.as_ref();
         let m = hash_to_scalar(&[id]);
@@ -63,15 +65,14 @@ impl Proof {
         let u = a * r;
         let t = hash_to_scalar(&[&u.to_affine().to_compressed(), nonce.as_ref()]);
 
-        let z: G1Projective = (token.0 + blindings.iter().map(|b| b.0).sum::<G1Projective>()) * (r + t);
-        Some(Self { u, z: -z})
+        let z: G1Projective =
+            (token.0 + blindings.iter().map(|b| b.0).sum::<G1Projective>()) * (r + t);
+        Some(Self { u, z: -z })
     }
 
     /// Check whether this proof is valid
     pub fn open<B: AsRef<[u8]>, N: AsRef<[u8]>>(&self, pk: PublicKey, id: B, nonce: N) -> Choice {
-        if (self.u.is_identity() |
-            self.z.is_identity() |
-            pk.is_valid()).unwrap_u8() == 1u8 {
+        if (self.u.is_identity() | self.z.is_identity() | pk.is_invalid()).unwrap_u8() == 1u8 {
             return 0u8.into();
         }
 
@@ -123,11 +124,7 @@ impl Proof {
         let zz = G1Affine::from_compressed(&<[u8; 48]>::try_from(&data[48..]).unwrap())
             .map(G1Projective::from);
 
-        uu.and_then(|u| {
-            zz.and_then(|z| {
-                CtOption::new(Proof { u, z }, 1u8.into())
-            })
-        })
+        uu.and_then(|u| zz.and_then(|z| CtOption::new(Proof { u, z }, 1u8.into())))
     }
 }
 

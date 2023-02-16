@@ -138,13 +138,15 @@ since the token should never be disclosed to anyone.
 
 Verify(<img src="https://render.githubusercontent.com/render/math?math=pk">, <img src="https://render.githubusercontent.com/render/math?math=id">, <img src="https://render.githubusercontent.com/render/math?math=\sigma">)
 
-- <img src="https://render.githubusercontent.com/render/math?math=m = H_{\mathbb{G}_1}(id)">
-- if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> return false
-- <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
-- if <img src="https://render.githubusercontent.com/render/math?math=m' = 0"> return false
-- <img src="https://render.githubusercontent.com/render/math?math=U = H_{\mathbb{G}_1}(m')">
-- if <img src="https://render.githubusercontent.com/render/math?math=U = 1_{\mathbb{G}_1}"> return false
-- return <img src="https://render.githubusercontent.com/render/math?math=e(U, \widetilde{X} %2B m \cdot \widetilde{Y} %2B m' \cdot \widetilde{W}) . e(\sigma, -\widetilde{P}) = 1_{\mathbb{G}_1}">
+
+```math
+\begin{align}
+m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m &= 0\ \text{false} \\
+m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' &= 0\ \text{false} \\
+U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U &= 1_{\mathbb{G}_1}\ \text{false} \\
+e(U, \widetilde{X} + m \cdot \widetilde{Y} + m' \cdot \widetilde{W}).e(\sigma, -\widetilde{P}) = 1_{\mathbb{G}_T}
+\end{align}
+```
 
 <img src="https://render.githubusercontent.com/render/math?math=m, m', U"> can be cached by the holder for performance if desired in which case
 those steps can be skipped.
@@ -157,6 +159,8 @@ This allows the token to be reused while minimizing the risk of correlation.
 Below is the algorithm for Prove assuming a blind factor with a pin.
 
 Prove(<img src="https://render.githubusercontent.com/render/math?math=\sigma'">, <img src="https://render.githubusercontent.com/render/math?math=id">, <img src="https://render.githubusercontent.com/render/math?math=n">)
+
+<img src="https://render.githubusercontent.com/render/math?math=n"> can be a timestamp or publicly verifiable value like the latest Bitcoin hash.
 
 
 ```math

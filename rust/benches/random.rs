@@ -2,8 +2,8 @@ use criterion::*;
 use oberon::*;
 use rand::rngs::OsRng;
 use rand::thread_rng;
-use rand_core::{RngCore, SeedableRng, CryptoRng};
 use rand_chacha::ChaChaRng;
+use rand_core::{CryptoRng, RngCore, SeedableRng};
 use rand_xorshift::XorShiftRng;
 
 struct XorShiftRngWrapper(XorShiftRng);
@@ -54,11 +54,7 @@ fn signing(c: &mut Criterion) {
     thread_rng().fill_bytes(&mut sk_seed);
     thread_rng().fill_bytes(&mut id);
     let sk = SecretKey::hash(&sk_seed);
-    c.bench_function("token generation", |b| {
-        b.iter(|| {
-            sk.sign(&id).unwrap()
-        })
-    });
+    c.bench_function("token generation", |b| b.iter(|| sk.sign(&id).unwrap()));
 }
 
 fn token_verify(c: &mut Criterion) {
@@ -69,11 +65,7 @@ fn token_verify(c: &mut Criterion) {
     let sk = SecretKey::hash(&sk_seed);
     let pk = PublicKey::from(&sk);
     let token = sk.sign(&id).unwrap();
-    c.bench_function("token verification", |b| {
-        b.iter(|| {
-            token.verify(pk, id)
-        })
-    });
+    c.bench_function("token verification", |b| b.iter(|| token.verify(pk, id)));
 }
 
 fn xof_shift_rng(c: &mut Criterion) {
@@ -111,39 +103,36 @@ fn proof_verify(c: &mut Criterion) {
     let proof = Proof::new(&token, &[], id, &nonce, thread_rng()).unwrap();
     let pk = PublicKey::from(&sk);
     c.bench_function("proof verification", |b| {
-        b.iter(|| {
-            proof.open(pk, id, nonce)
-        })
+        b.iter(|| proof.open(pk, id, nonce))
     });
 }
 
 fn blinding_factor(c: &mut Criterion) {
     c.bench_function("Blinding factor length 1", |b| {
-        b.iter(|| {
-            Blinding::new(&[1u8])
-        })
+        b.iter(|| Blinding::new(&[1u8]))
     });
     c.bench_function("Blinding factor length 2", |b| {
-        b.iter(|| {
-            Blinding::new(&[2u8; 2])
-        })
+        b.iter(|| Blinding::new(&[2u8; 2]))
     });
     c.bench_function("Blinding factor length 4", |b| {
-        b.iter(|| {
-            Blinding::new(&[4u8; 4])
-        })
+        b.iter(|| Blinding::new(&[4u8; 4]))
     });
     c.bench_function("Blinding factor length 8", |b| {
-        b.iter(|| {
-            Blinding::new(&[8u8; 8])
-        })
+        b.iter(|| Blinding::new(&[8u8; 8]))
     });
     c.bench_function("Blinding factor length 16", |b| {
-        b.iter(|| {
-            Blinding::new(&[16u8; 16])
-        })
+        b.iter(|| Blinding::new(&[16u8; 16]))
     });
 }
 
-criterion_group!(benches, signing, token_verify, proof_verify, xof_shift_rng, chacha_rng, os_rng, blinding_factor);
+criterion_group!(
+    benches,
+    signing,
+    token_verify,
+    proof_verify,
+    xof_shift_rng,
+    chacha_rng,
+    os_rng,
+    blinding_factor
+);
 criterion_main!(benches);

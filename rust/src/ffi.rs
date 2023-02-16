@@ -5,7 +5,7 @@ use ffi_support::{
     ConcurrentHandleMap, ErrorCode, ExternError,
 };
 use lazy_static::lazy_static;
-use std::{ptr, slice, vec::Vec, string::String};
+use std::{ptr, slice, string::String, vec::Vec};
 
 lazy_static! {
     /// The context manager for creating proofs
