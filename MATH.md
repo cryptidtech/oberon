@@ -102,14 +102,14 @@ Sign creates a token to be given to a user and works as follows
 
 Sign(<img src="https://render.githubusercontent.com/render/math?math=sk">, <img src="https://render.githubusercontent.com/render/math?math=id">)
 
-- <img src="https://render.githubusercontent.com/render/math?math=m = H_{\mathbb{Z}_q}(id)">
-- if <img src="https://render.githubusercontent.com/render/math?math=m = 0"> abort
-- <img src="https://render.githubusercontent.com/render/math?math=m' = H_{\mathbb{Z}_q}(m)">
-- if <img src="https://render.githubusercontent.com/render/math?math=m' = 0"> abort
-- <img src="https://render.githubusercontent.com/render/math?math=U = H_{\mathbb{G}_1}(m')">
-- if <img src="https://render.githubusercontent.com/render/math?math=U = 1_{\mathbb{G}_1}"> abort
-- <img src="https://render.githubusercontent.com/render/math?math=\sigma = (x %2B m'.w %2B m.y) \cdot U"> 
-- if <img src="https://render.githubusercontent.com/render/math?math=\sigma = 1_{\mathbb{G}_1}"> abort
+```math
+\begin{align}
+m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m &= 0\ \text{abort} \\
+m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' &= 0\ \text{abort} \\
+U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U &= 1_{\mathbb{G}_1}\ \text{abort} \\
+\sigma &= (x + m.y + m'.w)\cdot U ;& \text{if}\ \sigma &= 1_{\mathbb{G}_1}\ \text{abort} \\
+\end{align}
+```
 
 Output token is <img src="https://render.githubusercontent.com/render/math?math=\sigma">
 
@@ -144,7 +144,7 @@ Verify(<img src="https://render.githubusercontent.com/render/math?math=pk">, <im
 m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m &= 0\ \text{false} \\
 m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' &= 0\ \text{false} \\
 U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U &= 1_{\mathbb{G}_1}\ \text{false} \\
-e(U, \widetilde{X} + m \cdot \widetilde{Y} + m' \cdot \widetilde{W}).e(\sigma, -\widetilde{P}) = 1_{\mathbb{G}_T}
+e(U, &\widetilde{X} + m \cdot \widetilde{Y} + m' \cdot \widetilde{W}).e(\sigma, -\widetilde{P}) = 1_{\mathbb{G}_T}
 \end{align}
 ```
 
