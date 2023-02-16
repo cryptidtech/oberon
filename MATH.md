@@ -96,6 +96,22 @@ The secret key <img src="https://render.githubusercontent.com/render/math?math=s
 
 The public key <img src="https://render.githubusercontent.com/render/math?math=pk = \{\widetilde{W}, \widetilde{X}, \widetilde{Y}\}"> and is 288 bytes.
 
+### IdToInternals
+
+This function maps the user's identity string <img src="https://render.githubusercontent.com/render/math?math=id"> to the various internals and checks if they are valid.
+
+IdToInternals(<img src="https://render.githubusercontent.com/render/math?math=id">)
+
+```math
+\begin{align}
+m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m &= 0\ \text{abort} \\
+m' &= H_{\mathbb{Z}_q}(m) ;& \text{if}\ m' &= 0\ \text{abort} \\
+U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U &= 1_{\mathbb{G}_1}\ \text{abort} \\
+\end{align}
+```
+
+The function outputs (<img src="https://render.githubusercontent.com/render/math?math=m">, <img src="https://render.githubusercontent.com/render/math?math=m'">, <img src="https://render.githubusercontent.com/render/math?math=U">)
+
 ### Sign
 
 Sign creates a token to be given to a user and works as follows
@@ -104,9 +120,7 @@ Sign(<img src="https://render.githubusercontent.com/render/math?math=sk">, <img 
 
 ```math
 \begin{align}
-m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m &= 0\ \text{abort} \\
-m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' &= 0\ \text{abort} \\
-U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U &= 1_{\mathbb{G}_1}\ \text{abort} \\
+m, m', U &= \text{IdToInternals}(id) \\
 \sigma &= (x + m.y + m'.w)\cdot U ;& \text{if}\ \sigma &= 1_{\mathbb{G}_1}\ \text{abort} \\
 \end{align}
 ```
@@ -141,9 +155,7 @@ Verify(<img src="https://render.githubusercontent.com/render/math?math=pk">, <im
 
 ```math
 \begin{align}
-m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m &= 0\ \text{false} \\
-m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' &= 0\ \text{false} \\
-U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U &= 1_{\mathbb{G}_1}\ \text{false} \\
+m, m', U &= \text{IdToInternals}(id) \\
 e(U, &\widetilde{X} + m \cdot \widetilde{Y} + m' \cdot \widetilde{W}).e(\sigma, -\widetilde{P}) = 1_{\mathbb{G}_T}
 \end{align}
 ```
@@ -165,9 +177,7 @@ Prove(<img src="https://render.githubusercontent.com/render/math?math=\sigma'">,
 
 ```math
 \begin{align}
-m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m &= 0\ \text{abort} \\
-m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' &= 0\ \text{abort} \\
-U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U &= 1_{\mathbb{G}_1}\ \text{abort} \\
+m, m', U &= \text{IdToInternals}(id) \\
 r &\xleftarrow{\$} \mathbb{Z}_q* ;& \text{if}\ r &= 0\ \text{abort} \\
 U' &= r \cdot U ;& \text{if}\ U' &= 1_{\mathbb{G}_1}\ \text{abort} \\
 t &= H_{\mathbb{Z}_q}(U' || n) ;& \text{if}\ t &= 0\ \text{abort} \\
@@ -186,9 +196,7 @@ Open(<img src="https://render.githubusercontent.com/render/math?math=pk">, <img 
 \begin{align}
  & & \text{if}\ U' = 1_{\mathbb{G}_1}\ \text{abort} \\
  & & \text{if}\ Z = 1_{\mathbb{G}_1}\ \text{abort} \\
-m &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m = 0\ \text{abort} \\
-m' &= H_{\mathbb{Z}_q}(id) ;& \text{if}\ m' = 0\ \text{abort} \\
-U &= H_{\mathbb{G}_1}(m') ;& \text{if}\ U = 1_{\mathbb{G}_1}\ \text{abort} \\
+m, m', U &= \text{IdToInternals}(id) \\
 t &= H_{\mathbb{Z}_q}(U' || n) ;& \text{if}\ t = 0\ \text{abort} \\
 e(&U' + t\cdot U, \widetilde{X} + m \cdot \widetilde{Y} + m' \cdot \widetilde{W})e(Z, \widetilde{P}) == 1_{\mathbb{G}_T}
 \end{align}
