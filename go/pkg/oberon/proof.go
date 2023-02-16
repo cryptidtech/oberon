@@ -4,17 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/coinbase/kryptology/pkg/core/curves"
-	"github.com/coinbase/kryptology/pkg/core/curves/native"
 	"github.com/coinbase/kryptology/pkg/core/curves/native/bls12381"
 	"io"
 )
 
-const proofBytes = 256
+const proofBytes = 96
 
 type Proof struct {
-	Proof, UTick       *curves.PointBls12381G1
-	Commitment         *curves.PointBls12381G2
-	Challenge, Schnorr *curves.ScalarBls12381
+	UTick, Z *curves.PointBls12381G1
 }
 
 func NewProof(token *Token, blindings []*Blinding, id, nonce []byte, rng io.Reader) (*Proof, error) {
@@ -42,52 +39,27 @@ func (p *Proof) Create(
 		return err
 	}
 
-	t := genRndScalar(rng)
-	tt := genRndScalar(rng)
 	r := genRndScalar(rng)
 	uTick := u.Mul(r)
-	points := make([]curves.Point, 0, 2+len(blindings))
-	scalars := make([]curves.Scalar, 0, 2+len(blindings))
 
-	points = append(points, uTick)
-	scalars = append(scalars, t)
-
-	points = append(points, token.Value)
-	scalars = append(scalars, r)
-
-	for _, b := range blindings {
-		points = append(points, b.Value)
-		scalars = append(scalars, r)
-	}
-
-	proof := u.SumOfProducts(points, scalars)
-	if proof == nil {
-		return nil
-	}
-	curve := curves.BLS12381G2()
-
-	commitment := curve.ScalarBaseMult(t)
-	proving := curve.ScalarBaseMult(tt)
-
-	challenge, err := hashToScalar([][]byte{
-		id,
+	t, err := hashToScalar([][]byte{
 		uTick.ToAffineCompressed(),
-		proof.ToAffineCompressed(),
-		commitment.ToAffineCompressed(),
-		proving.ToAffineCompressed(),
 		nonce,
 	})
 	if err != nil {
 		return err
 	}
-	tv := challenge.Mul(t)
-	schnorr := tt.Sub(tv)
 
-	p.Proof = proof.(*curves.PointBls12381G1)
+	rat := r.Add(t)
+	z := curves.BLS12381G1().NewIdentityPoint()
+	z = z.Add(token.Value)
+	for _, b := range blindings {
+		z = z.Add(b.Value)
+	}
+	z = z.Mul(rat)
+
 	p.UTick = uTick.(*curves.PointBls12381G1)
-	p.Commitment = commitment.(*curves.PointBls12381G2)
-	p.Challenge = challenge
-	p.Schnorr = schnorr.(*curves.ScalarBls12381)
+	p.Z = z.Neg().(*curves.PointBls12381G1)
 	return nil
 }
 
@@ -95,12 +67,10 @@ func (p Proof) Open(
 	pk *PublicKey,
 	id, nonce []byte,
 ) error {
-	goodProof := isValidPointG1(p.Proof)
+	goodProof := isValidPointG1(p.Z)
 	goodUTick := isValidPointG1(p.UTick)
-	goodComm := isValidPointG2(p.Commitment)
 
-	if !goodProof || !goodUTick || !goodComm ||
-		p.Challenge.IsZero() || p.Schnorr.IsZero() {
+	if !goodProof || !goodUTick {
 		return fmt.Errorf("invalid proof")
 	}
 
@@ -112,42 +82,24 @@ func (p Proof) Open(
 	if err != nil {
 		return err
 	}
-
-	curve := curves.BLS12381G2()
-	g2 := curve.NewGeneratorPoint().(*curves.PointBls12381G2)
-	proving := g2.SumOfProducts(
-		[]curves.Point{g2, p.Commitment},
-		[]curves.Scalar{p.Schnorr, p.Challenge},
-	)
-	if proving == nil {
-		return fmt.Errorf("invalid proof")
+	u, err := computeU(mTick)
+	if err != nil {
+		return err
 	}
-
-	challenge, err := hashToScalar([][]byte{
-		id,
+	t, err := hashToScalar([][]byte{
 		p.UTick.ToAffineCompressed(),
-		p.Proof.ToAffineCompressed(),
-		p.Commitment.ToAffineCompressed(),
-		proving.ToAffineCompressed(),
 		nonce,
 	})
 	if err != nil {
 		return err
 	}
-	if challenge == nil || challenge.Value.Equal(p.Challenge.Value) == 0 {
-		return fmt.Errorf("invalid challenge")
-	}
+	lhs := p.UTick.Add(u.Mul(t)).(*curves.PointBls12381G1)
+	rhs := pk.X.Add(pk.Y.Mul(m)).Add(pk.W.Mul(mTick)).(*curves.PointBls12381G2)
+	g2 := curves.BLS12381G2().NewGeneratorPoint().(*curves.PointBls12381G2)
 
-	rhs := g2.SumOfProducts(
-		[]curves.Point{pk.W, pk.X, pk.Y, p.Commitment},
-		[]curves.Scalar{mTick, curve.NewScalar().One(), m, curve.NewScalar().One()})
-	if rhs == nil {
-		return fmt.Errorf("invalid proof")
-	}
-	r := rhs.(*curves.PointBls12381G2)
 	engine := new(bls12381.Engine)
-	engine.AddPairInvG1(p.UTick.Value, r.Value)
-	engine.AddPair(p.Proof.Value, g2.Value)
+	engine.AddPair(lhs.Value, rhs.Value)
+	engine.AddPair(p.Z.Value, g2.Value)
 	if engine.Check() {
 		return nil
 	} else {
@@ -157,13 +109,8 @@ func (p Proof) Open(
 
 func (p Proof) MarshalBinary() ([]byte, error) {
 	var tmp [proofBytes]byte
-	copy(tmp[:48], p.Proof.ToAffineCompressed())
-	copy(tmp[48:96], p.UTick.ToAffineCompressed())
-	copy(tmp[96:192], p.Commitment.ToAffineCompressed())
-	t := p.Challenge.Value.Bytes()
-	copy(tmp[192:224], t[:])
-	t = p.Schnorr.Value.Bytes()
-	copy(tmp[224:], t[:])
+	copy(tmp[:48], p.UTick.ToAffineCompressed())
+	copy(tmp[48:], p.Z.ToAffineCompressed())
 	return tmp[:], nil
 }
 
@@ -172,81 +119,52 @@ func (p *Proof) UnmarshalBinary(in []byte) error {
 	if len(in) != proofBytes {
 		return fmt.Errorf("invalid length")
 	}
-	proof, err := curve.NewG1IdentityPoint().FromAffineCompressed(in[:48])
+	utick, err := curve.NewG1IdentityPoint().FromAffineCompressed(in[:48])
 	if err != nil {
 		return err
 	}
-	uTick, err := curve.NewG1IdentityPoint().FromAffineCompressed(in[48:96])
-	if err != nil {
-		return err
-	}
-	commitment, err := curve.NewG2IdentityPoint().FromAffineCompressed(in[96:192])
-	if err != nil {
-		return err
-	}
-	var t [native.FieldBytes]byte
-	copy(t[:], in[192:224])
-	challenge, _ := curve.NewScalar().(*curves.ScalarBls12381)
-	_, err = challenge.Value.SetBytes(&t)
-	if err != nil {
-		return err
-	}
-	copy(t[:], in[224:])
-	schnorr, _ := curve.NewScalar().(*curves.ScalarBls12381)
-	_, err = schnorr.Value.SetBytes(&t)
+	z, err := curve.NewG1IdentityPoint().FromAffineCompressed(in[48:])
 	if err != nil {
 		return err
 	}
 
-	Proof, _ := proof.(*curves.PointBls12381G1)
-	UTick, _ := uTick.(*curves.PointBls12381G1)
-	Commitment, _ := commitment.(*curves.PointBls12381G2)
+	Z, _ := z.(*curves.PointBls12381G1)
+	UTick, _ := utick.(*curves.PointBls12381G1)
 
-	goodProof := isValidPointG1(Proof)
+	goodProof := isValidPointG1(Z)
 	goodUTick := isValidPointG1(UTick)
-	goodComm := isValidPointG2(Commitment)
 
-	if goodProof && goodUTick && goodComm && !challenge.IsZero() && !schnorr.IsZero() {
-		p.Proof = Proof
+	if goodProof && goodUTick {
+		p.Z = Z
 		p.UTick = UTick
-		p.Commitment = Commitment
-		p.Challenge = challenge
-		p.Schnorr = schnorr
 		return nil
 	}
 	return fmt.Errorf("invalid proof")
 }
 
 func (p Proof) MarshalText() ([]byte, error) {
-	c := p.Challenge.Value.Bytes()
-	s := p.Schnorr.Value.Bytes()
 	tmp := map[string][]byte{
-		"proof":      p.Proof.ToAffineCompressed(),
-		"u_tick":     p.UTick.ToAffineCompressed(),
-		"commitment": p.Commitment.ToAffineCompressed(),
-		"challenge":  c[:],
-		"schnorr":    s[:],
+		"z":      p.Z.ToAffineCompressed(),
+		"u_tick": p.UTick.ToAffineCompressed(),
 	}
 	return json.Marshal(&tmp)
 }
 
 func (p *Proof) UnmarshalText(in []byte) error {
 	var tmp map[string][]byte
-	var proof, uTick *curves.PointBls12381G1
-	var commitment *curves.PointBls12381G2
-	var challenge, schnorr *curves.ScalarBls12381
+	var z, uTick *curves.PointBls12381G1
 
 	curve := curves.BLS12381(new(curves.PointBls12381G1))
 	err := json.Unmarshal(in, &tmp)
 	if err != nil {
 		return err
 	}
-	if proofBytes, ok := tmp["proof"]; ok {
+	if proofBytes, ok := tmp["z"]; ok {
 		pf, err := curve.NewG1IdentityPoint().FromAffineCompressed(proofBytes)
 		if err != nil {
 			return err
 		}
-		proof, _ = pf.(*curves.PointBls12381G1)
+		z, _ = pf.(*curves.PointBls12381G1)
 	} else {
 		return fmt.Errorf("missing expected map key 'proof'")
 	}
@@ -260,49 +178,12 @@ func (p *Proof) UnmarshalText(in []byte) error {
 	} else {
 		return fmt.Errorf("missing expected map key 'u_tick'")
 	}
-	if commitmentBytes, ok := tmp["commitment"]; ok {
-		com, err := curve.NewG2IdentityPoint().FromAffineCompressed(commitmentBytes)
-		if err != nil {
-			return err
-		}
-		commitment, _ = com.(*curves.PointBls12381G2)
-	} else {
-		return fmt.Errorf("missing expected mak key 'commitment'")
-	}
-	if challengeBytes, ok := tmp["challenge"]; ok {
-		if len(challengeBytes) != native.FieldBytes {
-			return fmt.Errorf("invalid byte sequence for 'challenge'")
-		}
-		var t [native.FieldBytes]byte
-		copy(t[:], challengeBytes)
-		challenge, _ = curve.NewScalar().(*curves.ScalarBls12381)
-		_, err = challenge.Value.SetBytes(&t)
-		if err != nil {
-			return err
-		}
-	}
-	if schnorrBytes, ok := tmp["schnorr"]; ok {
-		if len(schnorrBytes) != native.FieldBytes {
-			return fmt.Errorf("invalid byte sequence for 'schnorr'")
-		}
-		var t [native.FieldBytes]byte
-		copy(t[:], schnorrBytes)
-		schnorr, _ = curve.NewScalar().(*curves.ScalarBls12381)
-		_, err = schnorr.Value.SetBytes(&t)
-		if err != nil {
-			return err
-		}
-	}
 
-	goodProof := isValidPointG1(proof)
+	goodProof := isValidPointG1(z)
 	goodUTick := isValidPointG1(uTick)
-	goodComm := isValidPointG2(commitment)
-	if goodProof && goodUTick && goodComm && !challenge.IsZero() && !schnorr.IsZero() {
-		p.Proof = proof
+	if goodProof && goodUTick {
+		p.Z = z
 		p.UTick = uTick
-		p.Commitment = commitment
-		p.Challenge = challenge
-		p.Schnorr = schnorr
 		return nil
 	}
 	return fmt.Errorf("invalid proof")
