@@ -44,8 +44,8 @@ impl PublicKey {
     /// The number of bytes in a public key
     pub const BYTES: usize = 288;
 
-    /// Is this public key valid
-    pub fn is_valid(&self) -> Choice {
+    /// Is this public key invalid
+    pub fn is_invalid(&self) -> Choice {
         self.w.is_identity() | self.y.is_identity() | self.x.is_identity()
     }
 

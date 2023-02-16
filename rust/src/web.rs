@@ -11,6 +11,8 @@ use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
+#[cfg(not(any(feature = "alloc", feature = "std")))]
+pub const MAX_BLINDING_FACTORS: usize = 2;
 #[cfg(any(feature = "alloc", feature = "std"))]
 type BlindingList = Vec<Blinding>;
 #[cfg(not(any(feature = "alloc", feature = "std")))]

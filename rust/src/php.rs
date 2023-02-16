@@ -9,7 +9,7 @@ use rand::thread_rng;
 
 use ext_php_rs::zend::ModuleEntry;
 use ext_php_rs::{info_table_end, info_table_row, info_table_start};
-use std::{convert::TryFrom, vec::Vec, string::String};
+use std::{convert::TryFrom, string::String, vec::Vec};
 
 /// Create a new secret key
 ///
