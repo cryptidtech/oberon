@@ -81,7 +81,6 @@
 #[cfg(feature = "alloc")]
 extern crate alloc;
 #[cfg(feature = "std")]
-#[cfg_attr(feature = "wasm", macro_use)]
 extern crate std;
 
 #[cfg(feature = "wasm")]
@@ -139,8 +138,7 @@ macro_rules! wasm_slice_impl {
             type Error = &'static str;
 
             fn try_from(value: wasm_bindgen::JsValue) -> Result<Self, Self::Error> {
-                value
-                    .into_serde::<$name>()
+                serde_json::from_str::<$name>(&value.as_string().unwrap())
                     .map_err(|_| "unable to deserialize value")
             }
         }

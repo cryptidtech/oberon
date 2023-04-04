@@ -6,17 +6,9 @@ use crate::{Blinding, Proof, PublicKey, SecretKey, Token};
 use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 
-#[cfg(all(feature = "alloc", not(feature = "std")))]
-use alloc::vec::Vec;
-#[cfg(feature = "std")]
 use std::vec::Vec;
 
-#[cfg(not(any(feature = "alloc", feature = "std")))]
-pub const MAX_BLINDING_FACTORS: usize = 2;
-#[cfg(any(feature = "alloc", feature = "std"))]
 type BlindingList = Vec<Blinding>;
-#[cfg(not(any(feature = "alloc", feature = "std")))]
-type BlindingList = [Blinding; crate::util::MAX_BLINDING_FACTORS];
 
 /// Create new random secret key
 #[wasm_bindgen]
@@ -71,7 +63,7 @@ pub fn remove_blinding(token: Token, data: &[u8]) -> Token {
 #[wasm_bindgen]
 pub fn create_proof(token: Token, id: &[u8], blindings: JsValue, nonce: &[u8]) -> Option<Proof> {
     let rng = thread_rng();
-    match blindings.into_serde::<BlindingList>() {
+    match serde_json::from_str::<BlindingList>(&blindings.as_string().unwrap()) {
         Err(_) => None,
         Ok(bs) => Proof::new(&token, &bs, id, nonce, rng),
     }

@@ -4,33 +4,23 @@
 */
 use crate::{util::*, Blinding, PublicKey, SecretKey};
 use bls12_381_plus::{
+    ff::Field,
+    group::{Curve, Group},
+};
+use bls12_381_plus::{
     multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
 };
 #[cfg(feature = "wasm")]
 use core::convert::TryFrom;
 use core::ops::{Add, Sub};
-use ff::Field;
-use group::{Curve, Group};
 use serde::{Deserialize, Serialize};
 use subtle::{Choice, ConstantTimeEq, CtOption};
-use zeroize::Zeroize;
+use zeroize::ZeroizeOnDrop;
 
 /// The authentication token
 /// Display is not implemented to prevent accidental leak of the token
-#[derive(Clone, Debug, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Eq, Deserialize, Serialize, ZeroizeOnDrop)]
 pub struct Token(pub(crate) G1Projective);
-
-impl Zeroize for Token {
-    fn zeroize(&mut self) {
-        self.0 -= self.0;
-    }
-}
-
-impl Drop for Token {
-    fn drop(&mut self) {
-        self.zeroize();
-    }
-}
 
 impl Default for Token {
     fn default() -> Self {

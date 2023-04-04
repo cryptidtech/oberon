@@ -3,13 +3,12 @@
     SPDX-License-Identifier: Apache-2.0
 */
 use crate::{util::*, Token};
-use bls12_381_plus::Scalar;
+use bls12_381_plus::{ff::Field, Scalar};
 use core::convert::TryFrom;
-use ff::Field;
 use rand_core::*;
 use serde::{Deserialize, Serialize};
 use subtle::{Choice, ConstantTimeEq, CtOption};
-use zeroize::Zeroize;
+use zeroize::ZeroizeOnDrop;
 
 /// The secret key used for signing tokens
 /// Display is not implemented to prevent accidental leak of the key
@@ -28,7 +27,7 @@ use zeroize::Zeroize;
 /// use oberon::*;
 /// let sk = SecretKey::hash(b"my seed");
 /// ```
-#[derive(Clone, Debug, Eq, Deserialize, Serialize, Zeroize)]
+#[derive(Clone, Debug, Eq, Deserialize, Serialize, ZeroizeOnDrop)]
 #[zeroize(drop)]
 pub struct SecretKey {
     pub(crate) w: Scalar,

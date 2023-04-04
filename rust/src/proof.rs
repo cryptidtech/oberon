@@ -4,10 +4,10 @@
 */
 use crate::{util::*, Blinding, PublicKey, Token};
 use bls12_381_plus::{
+    ff::Field,
+    group::{Curve, Group},
     multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
 };
-use ff::Field;
-use group::{Curve, Group};
 use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use subtle::{Choice, CtOption};

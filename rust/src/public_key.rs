@@ -3,9 +3,8 @@
     SPDX-License-Identifier: Apache-2.0
 */
 use crate::{SecretKey, Token};
-use bls12_381_plus::{G2Affine, G2Projective};
+use bls12_381_plus::{group::Curve, G2Affine, G2Projective};
 use core::convert::TryFrom;
-use group::Curve;
 use serde::{Deserialize, Serialize};
 use subtle::{Choice, CtOption};
 

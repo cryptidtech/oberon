@@ -3,10 +3,9 @@
     SPDX-License-Identifier: Apache-2.0
 */
 use crate::util::*;
-use bls12_381_plus::{G1Affine, G1Projective};
+use bls12_381_plus::{group::Curve, G1Affine, G1Projective};
 #[cfg(feature = "wasm")]
 use core::convert::TryFrom;
-use group::Curve;
 use serde::{Deserialize, Serialize};
 use subtle::CtOption;
 
