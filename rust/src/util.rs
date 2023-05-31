@@ -2,7 +2,7 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
-use bls12_381_plus::{elliptic_curve::hash2curve::ExpandMsgXof, G1Projective, Scalar};
+use crate::inner_types::{elliptic_curve::hash2curve::ExpandMsgXof, G1Projective, Scalar};
 use digest::{ExtendableOutput, Update, XofReader};
 use sha3::Shake256;
 

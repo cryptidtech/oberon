@@ -2,14 +2,12 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
-use crate::{util::*, Blinding, PublicKey, SecretKey};
-use bls12_381_plus::{
+use crate::inner_types::{
     ff::Field,
     group::{Curve, Group},
-};
-use bls12_381_plus::{
     multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
 };
+use crate::{util::*, Blinding, PublicKey, SecretKey};
 #[cfg(feature = "wasm")]
 use core::convert::TryFrom;
 use core::ops::{Add, Sub};
@@ -126,11 +124,11 @@ impl Token {
         if m.is_zero().unwrap_u8() == 1 {
             return None;
         }
-        let m_tick = hash_to_scalar(&[&m.to_bytes()[..]]);
+        let m_tick = hash_to_scalar(&[&m.to_le_bytes()[..]]);
         if m_tick.is_zero().unwrap_u8() == 1 {
             return None;
         }
-        let u = hash_to_curve(&m_tick.to_bytes()[..]);
+        let u = hash_to_curve(&m_tick.to_le_bytes()[..]);
         if u.is_identity().unwrap_u8() == 1 {
             return None;
         }
@@ -149,11 +147,11 @@ impl Token {
         if m.is_zero().unwrap_u8() == 1 {
             return Choice::from(0u8);
         }
-        let m_tick = hash_to_scalar(&[&m.to_bytes()[..]]);
+        let m_tick = hash_to_scalar(&[&m.to_le_bytes()[..]]);
         if m_tick.is_zero().unwrap_u8() == 1 {
             return Choice::from(0u8);
         }
-        let u = hash_to_curve(&m_tick.to_bytes()[..]);
+        let u = hash_to_curve(&m_tick.to_le_bytes()[..]);
         if u.is_identity().unwrap_u8() == 1 {
             return Choice::from(0u8);
         }

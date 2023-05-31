@@ -2,8 +2,8 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
+use crate::inner_types::{ff::Field, Scalar};
 use crate::{util::*, Token};
-use bls12_381_plus::{ff::Field, Scalar};
 use core::convert::TryFrom;
 use rand_core::*;
 use serde::{Deserialize, Serialize};
@@ -93,17 +93,17 @@ impl SecretKey {
     /// Convert this secret key into a byte sequence
     pub fn to_bytes(&self) -> [u8; Self::BYTES] {
         let mut out = [0u8; Self::BYTES];
-        out[..32].copy_from_slice(&self.w.to_bytes()[..]);
-        out[32..64].copy_from_slice(&self.x.to_bytes()[..]);
-        out[64..].copy_from_slice(&self.y.to_bytes()[..]);
+        out[..32].copy_from_slice(&self.w.to_le_bytes()[..]);
+        out[32..64].copy_from_slice(&self.x.to_le_bytes()[..]);
+        out[64..].copy_from_slice(&self.y.to_le_bytes()[..]);
         out
     }
 
     /// Convert a byte sequence to a secret key
     pub fn from_bytes(data: &[u8; Self::BYTES]) -> CtOption<Self> {
-        let ww = Scalar::from_bytes(&<[u8; 32]>::try_from(&data[..32]).unwrap());
-        let xx = Scalar::from_bytes(&<[u8; 32]>::try_from(&data[32..64]).unwrap());
-        let yy = Scalar::from_bytes(&<[u8; 32]>::try_from(&data[64..]).unwrap());
+        let ww = Scalar::from_le_bytes(&<[u8; 32]>::try_from(&data[..32]).unwrap());
+        let xx = Scalar::from_le_bytes(&<[u8; 32]>::try_from(&data[32..64]).unwrap());
+        let yy = Scalar::from_le_bytes(&<[u8; 32]>::try_from(&data[64..]).unwrap());
 
         ww.and_then(|w| {
             xx.and_then(|x| yy.and_then(|y| CtOption::new(Self { w, x, y }, Choice::from(1u8))))

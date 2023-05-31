@@ -2,12 +2,12 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
-use crate::{util::*, Blinding, PublicKey, Token};
-use bls12_381_plus::{
+use crate::inner_types::{
     ff::Field,
     group::{Curve, Group},
     multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
 };
+use crate::{util::*, Blinding, PublicKey, Token};
 use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
 use subtle::{Choice, CtOption};
@@ -52,11 +52,11 @@ impl Proof {
         if m.is_zero().unwrap_u8() == 1 {
             return None;
         }
-        let m_tick = hash_to_scalar(&[&m.to_bytes()[..]]);
+        let m_tick = hash_to_scalar(&[&m.to_le_bytes()[..]]);
         if m_tick.is_zero().unwrap_u8() == 1 {
             return None;
         }
-        let a = hash_to_curve(&m_tick.to_bytes()[..]);
+        let a = hash_to_curve(&m_tick.to_le_bytes()[..]);
         if a.is_identity().unwrap_u8() == 1 {
             return None;
         }
@@ -81,11 +81,11 @@ impl Proof {
         if m.is_zero().unwrap_u8() == 1 {
             return 0u8.into();
         }
-        let m_tick = hash_to_scalar(&[&m.to_bytes()[..]]);
+        let m_tick = hash_to_scalar(&[&m.to_le_bytes()[..]]);
         if m_tick.is_zero().unwrap_u8() == 1u8 {
             return 0u8.into();
         }
-        let a = hash_to_curve(&m_tick.to_bytes()[..]);
+        let a = hash_to_curve(&m_tick.to_le_bytes()[..]);
         if a.is_identity().unwrap_u8() == 1 {
             return 0u8.into();
         }

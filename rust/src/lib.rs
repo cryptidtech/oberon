@@ -160,6 +160,17 @@ mod util;
 #[cfg(feature = "wasm")]
 mod web;
 
+#[cfg(not(any(feature = "rust", feature = "alloc", feature = "blstrs_plus")))]
+compile_error!("Please select bls12_381_plus or blstrs_plus as your elliptic curve");
+
+/// The inner representation types
+pub mod inner_types {
+    #[cfg(not(feature = "std"))]
+    pub use bls12_381_plus::{elliptic_curve, ff, group, *};
+    #[cfg(feature = "std")]
+    pub use blstrs_plus::{elliptic_curve, ff, group, pairing_lib, *};
+}
+
 pub use blinding::*;
 #[cfg_attr(docsrs, doc(cfg(feature = "ffi")))]
 #[cfg(feature = "ffi")]

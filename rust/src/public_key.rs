@@ -2,8 +2,8 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
+use crate::inner_types::{group::Curve, G2Affine, G2Projective};
 use crate::{SecretKey, Token};
-use bls12_381_plus::{group::Curve, G2Affine, G2Projective};
 use core::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 use subtle::{Choice, CtOption};

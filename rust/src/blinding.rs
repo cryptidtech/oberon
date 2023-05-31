@@ -2,8 +2,8 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
+use crate::inner_types::{group::Curve, G1Affine, G1Projective};
 use crate::util::*;
-use bls12_381_plus::{group::Curve, G1Affine, G1Projective};
 #[cfg(feature = "wasm")]
 use core::convert::TryFrom;
 use serde::{Deserialize, Serialize};
