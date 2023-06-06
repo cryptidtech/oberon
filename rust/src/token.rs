@@ -2,23 +2,31 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
-use crate::inner_types::{
-    ff::Field,
-    group::{Curve, Group},
-    multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
-};
+use crate::inner_types::*;
 use crate::{util::*, Blinding, PublicKey, SecretKey};
 #[cfg(feature = "wasm")]
 use core::convert::TryFrom;
 use core::ops::{Add, Sub};
 use serde::{Deserialize, Serialize};
 use subtle::{Choice, ConstantTimeEq, CtOption};
-use zeroize::ZeroizeOnDrop;
+use zeroize::Zeroize;
 
 /// The authentication token
 /// Display is not implemented to prevent accidental leak of the token
-#[derive(Clone, Debug, Eq, Deserialize, Serialize, ZeroizeOnDrop)]
+#[derive(Clone, Debug, Eq, Deserialize, Serialize)]
 pub struct Token(pub(crate) G1Projective);
+
+impl Zeroize for Token {
+    fn zeroize(&mut self) {
+        self.0 = G1Projective::IDENTITY;
+    }
+}
+
+impl Drop for Token {
+    fn drop(&mut self) {
+        self.zeroize();
+    }
+}
 
 impl Default for Token {
     fn default() -> Self {
@@ -156,10 +164,14 @@ impl Token {
             return Choice::from(0u8);
         }
 
+        #[cfg(feature = "std")]
+        let rhs = G2Projective::sum_of_products(
+            &[pk.w, pk.x, pk.y],
+            &[m_tick, Scalar::ONE, m]);
+        #[cfg(all(feature = "rust", not(feature = "std")))]
         let rhs = G2Projective::sum_of_products_in_place(
             &[pk.w, pk.x, pk.y],
-            &mut [m_tick, Scalar::ONE, m],
-        );
+            &mut [m_tick, Scalar::ONE, m]);
 
         multi_miller_loop(&[
             (&u.to_affine(), &G2Prepared::from(rhs.to_affine())),

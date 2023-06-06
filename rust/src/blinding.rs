@@ -2,7 +2,7 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
-use crate::inner_types::{group::Curve, G1Affine, G1Projective};
+use crate::inner_types::*;
 use crate::util::*;
 #[cfg(feature = "wasm")]
 use core::convert::TryFrom;

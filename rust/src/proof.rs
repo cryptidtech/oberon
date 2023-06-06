@@ -2,11 +2,7 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
-use crate::inner_types::{
-    ff::Field,
-    group::{Curve, Group},
-    multi_miller_loop, G1Affine, G1Projective, G2Affine, G2Prepared, G2Projective, Scalar,
-};
+use crate::inner_types::*;
 use crate::{util::*, Blinding, PublicKey, Token};
 use rand_core::{CryptoRng, RngCore};
 use serde::{Deserialize, Serialize};
@@ -93,6 +89,12 @@ impl Proof {
         let t = hash_to_scalar(&[&self.u.to_affine().to_compressed(), nonce.as_ref()]);
 
         let u = a * t + self.u;
+        #[cfg(feature = "std")]
+        let rhs = G2Projective::sum_of_products(
+            &[pk.w, pk.x, pk.y],
+            &[m_tick, Scalar::ONE, m],
+        );
+        #[cfg(all(feature = "rust", not(feature = "std")))]
         let rhs = G2Projective::sum_of_products_in_place(
             &[pk.w, pk.x, pk.y],
             &mut [m_tick, Scalar::ONE, m],

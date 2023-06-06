@@ -2,7 +2,7 @@
     Copyright Michael Lodder. All Rights Reserved.
     SPDX-License-Identifier: Apache-2.0
 */
-use crate::inner_types::{ff::Field, Scalar};
+use crate::inner_types::*;
 use crate::{util::*, Token};
 use core::convert::TryFrom;
 use rand_core::*;

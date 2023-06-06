@@ -166,9 +166,20 @@ compile_error!("Please select bls12_381_plus or blstrs_plus as your elliptic cur
 /// The inner representation types
 pub mod inner_types {
     #[cfg(not(feature = "std"))]
-    pub use bls12_381_plus::{elliptic_curve, ff, group, *};
+    pub use bls12_381_plus::{
+        elliptic_curve,
+        ff::{Field, PrimeField},
+        group::{self, Curve, Group, GroupEncoding, prime::PrimeCurveAffine},
+        *
+    };
     #[cfg(feature = "std")]
-    pub use blstrs_plus::{elliptic_curve, ff, group, pairing_lib, *};
+    pub use blstrs_plus::{
+        elliptic_curve,
+        ff::{Field, PrimeField},
+        group::{self, Curve, Group, GroupEncoding, prime::PrimeCurveAffine},
+        pairing_lib::{self, MillerLoopResult, MultiMillerLoop},
+        *
+    };
 }
 
 pub use blinding::*;
