@@ -1,6 +1,6 @@
 # Contributing to Oberon
 
-Oberson is Apache 2.0 licensed and accepts contributions via
+Oberon is Apache 2.0 licensed and accepts contributions via
 [GitHub](https://github.com/mikelodder7/oberon) pull requests.
 
 # Ways to contribute to Oberon
